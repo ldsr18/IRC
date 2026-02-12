@@ -14,12 +14,14 @@
 #define SERVER_HPP
 
 #include "client.hpp"
+#include "command.hpp"
 
 #include <iostream>
 #include <cstring>
 #include <vector>
 #include <cstdlib>
 #include <map>
+#include <sstream>
 
 #include <unistd.h> //close
 #include <fcntl.h>
@@ -33,16 +35,33 @@ class Server
 	private:
 			int _port;
 			int _serverFd; //fd du serveur = le socket qui écoute
+			std::string _password;
+
 			std::vector<struct pollfd> _fds;
 			std::map<int, Client> _clients;
 
+			//réseau
 			void setupSocket(); //crée et prépare lee serveur
 			void acceptClient();
 			bool receiveFromClient(int clientFd);
 			void removeFd(int fd);
 
+			//parsing command
+			Command parseCommand(const std::string& line);
+			void handleCommand(Client& client, const Command& cmd);
+
+			//gestion authentification
+			void handlePass(Client& client, const Command& cmd);
+			void handleNick(Client& client, const Command& cmd);
+			void handleUser(Client& client, const Command& cmd);
+			bool nicknameExists(const std::string& nick);
+
+			//réponses
+			void sendError(Client& client, const std::string& code, const std::string& message);
+			void sendWelcome(Client& client);
+
 	public:
-			Server(int port);
+			Server(int port, const std::string& password);
 			~Server();
 
 			void run();

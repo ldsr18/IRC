@@ -11,8 +11,9 @@
 /* ************************************************************************** */
 
 #include "../incs/server.hpp"
+#include "../incs/client.hpp"
 
-Server::Server(int port) : _port(port)
+Server::Server(int port, const std::string& password) : _port(port), _serverFd(-1), _password(password)
 {
 	setupSocket();
 }
@@ -131,7 +132,12 @@ bool Server::receiveFromClient(int clientFd)
 		std::string message = buf.substr(0, pos);
 		buf.erase(0, pos + 2);
 
+		//debug, à supprimer a la fin !!!!!!!!!!
 		std::cout << "Complete message from fd " << clientFd << ": [" << message << "]" << std::endl;
+		
+		Command cmd = parseCommand(message);
+		if (!cmd.name.empty())
+			handleCommand(client, cmd);
 	}
 	return (true);
 }
@@ -146,4 +152,127 @@ void Server::removeFd(int fd)
 			return;
 		}
 	}
+}
+
+Command Server::parseCommand(const std::string& line)
+{
+	Command cmd;
+
+	size_t pos = line.find(" :");
+	std::string commandPart;
+	std::string messagePart;
+
+	if (pos != std::string::npos)
+	{
+		commandPart = line.substr(0, pos);
+		messagePart = line.substr(pos + 2);
+	}
+	else
+		commandPart = line;
+
+	std::istringstream iss(commandPart);
+	std::string word;
+
+	if (iss >> word)
+		cmd.name = word;
+	while (iss >> word)
+		cmd.params.push_back(word);
+
+	if (!messagePart.empty())
+		cmd.params.push_back(messagePart);
+
+	return (cmd);
+}
+
+void Server::handleCommand(Client& client, const Command& cmd)
+{
+	if (cmd.name == "PASS")
+		handlePass(client, cmd);
+	else if (cmd.name == "NICK")
+		handleNick(client, cmd);
+	else if (cmd.name == "USER")
+		handleUser(client, cmd);
+	else
+		sendError(client, "421", cmd.name + " :Unknown command");
+
+	if (client.isRegistered())
+		sendWelcome(client);
+}
+
+void Server::handlePass(Client& client, const Command& cmd)
+{
+	if (client.passAccepted())
+	{
+		sendError(client, "462", " :You may not reregister");
+		return;
+	}
+	if (cmd.params.size() < 1)
+	{
+		sendError(client, "462", " PASS :Not enough parameters");
+		return;
+	}
+	if (cmd.params[0] != _password)
+	{
+		sendError(client, "462", " :Password incorrect");
+		return;
+	}
+	client.setPassAccepted(true);
+}
+
+void Server::handleNick(Client& client, const Command& cmd)
+{
+	if (!client.passAccepted())
+	{
+		sendError(client, "451", " :You have not registered");
+		return;
+	}
+	if (cmd.params.size() < 1)
+	{
+		sendError(client, "431", " * :No nickname given");
+		return;
+	}
+	std::string nickname = cmd.params[0];
+	if (nicknameExists(nickname))
+	{
+		sendError(client, "433", " * " + nickname + " :Nickname is already use");
+		return;
+	}
+	client.setNick(nickname);
+}
+
+void Server::handleUser(Client& client, const Command& cmd)
+{
+	if (!client.passAccepted())
+	{
+		sendError(client, "451", " :You have not registered");
+		return;
+	}
+	if (cmd.params.size() < 4)
+	{
+		sendError(client, "461", " User :Not enough parameters");
+		return;
+	}
+	client.setUser(cmd.params[0]);
+}
+
+bool Server::nicknameExists(const std::string& nick)
+{
+	for (std::map<int, Client>::iterator it = _clients.begin(); it != _clients.end(); ++it)
+	{
+		if (it->second.getNick() == nick)
+			return (true);
+	}
+	return (false);
+}
+
+void Server::sendError(Client& client, const std::string& code, const std::string& message)
+{
+	std::string output = ":ircserv " + code + " * " + message + "\r\n";
+	send(client.getFd(), output.c_str(), output.size(), 0);
+}
+
+void Server::sendWelcome(Client& client)
+{
+	std::string output = ":ircserv 001 " + client.getNick() + ":Welcome to our ircserv " + client.getNick() + "\r\n";
+	send(client.getFd(), output.c_str(), output.size(), 0);
 }

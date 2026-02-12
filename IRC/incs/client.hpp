@@ -22,11 +22,32 @@ class Client
 			int _fd;
 			std::string _buffer;
 
+			bool _passAccepted;
+			bool _hasNick;
+			bool _hasUser;
+			
+			std::string _nickname;
+			std::string _username;
+
 	public:
 			Client(int fd);
 
+			//getter d'état
+			bool passAccepted() const;
+			bool hasNick() const;
+			bool hasUser() const;
+			bool isRegistered() const;
+
+			//getter
 			int getFd() const;
 			std::string& getBuffer();
+			const std::string& getNick() const;
+			const std::string& getUser() const;
+
+			//setter
+			void setPassAccepted(bool value);
+			void setNick(const std::string& nick);
+			void setUser(const std::string& user);
 };
 
 #endif

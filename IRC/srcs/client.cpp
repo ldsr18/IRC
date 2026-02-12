@@ -12,8 +12,28 @@
 
 #include "../incs/client.hpp"
 
-Client::Client(int fd) : _fd(fd)
+Client::Client(int fd) : _fd(fd), _passAccepted(false), _hasNick(false), _hasUser(false)
 {
+}
+
+bool Client::passAccepted() const
+{
+	return (_passAccepted);
+}
+
+bool Client::hasNick() const
+{
+	return (_hasNick);
+}
+
+bool Client::hasUser() const
+{
+	return (_hasUser);
+}
+
+bool Client::isRegistered() const
+{
+	return (_passAccepted && _hasNick && _hasUser);
 }
 
 int Client::getFd() const
@@ -24,4 +44,31 @@ int Client::getFd() const
 std::string& Client::getBuffer()
 {
 	return (_buffer);
+}
+
+const std::string& Client::getNick() const
+{
+	return (_nickname);
+}
+
+const std::string& Client::getUser() const
+{
+	return (_username);
+}
+
+void Client::setPassAccepted(bool value)
+{
+	_passAccepted = value;
+}
+
+void Client::setNick(const std::string& nick)
+{
+	_nickname = nick;
+	_hasNick = true;
+}
+
+void Client::setUser(const std::string& user)
+{
+	_username = user;
+	_hasUser = true;
 }
