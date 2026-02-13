@@ -15,7 +15,7 @@
 
 #include "client.hpp"
 #include "command.hpp"
-#include "channel.hpp"
+#include "Channel.hpp"
 
 #include <iostream>
 #include <cstring>
@@ -43,7 +43,6 @@ class Server
 
 			std::vector<struct pollfd> _fds;
 			std::map<int, Client> _clients;
-			std::map<std::string, Channel> _channels;
 
 			//réseau
 			void setupSocket(); //crée et prépare lee serveur
@@ -65,8 +64,6 @@ class Server
 			//réponses
 			void sendError(Client& client, const std::string& code, const std::string& message);
 			void sendWelcome(Client& client);
-			void broadcastToChannel(Channel& channel, const std::string& msg, int exceptFd)
-
 			void broadcastToChannel(Channel& channel, const std::string& msg, int exceptFd);
 
 	public:

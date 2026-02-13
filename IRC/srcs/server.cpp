@@ -10,8 +10,8 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "../incs/server.hpp"
-#include "../incs/client.hpp"
+#include "server.hpp"
+#include "client.hpp"
 
 Server::Server(int port, const std::string& password) : _port(port), _serverFd(-1), _password(password)
 {
@@ -257,7 +257,7 @@ void Server::handleUser(Client& client, const Command& cmd)
 	client.setUser(cmd.params[0]);
 }
 
-void Server::handleJoin(Client& client, Command& cmd)
+void Server::handleJoin(Client& client, const Command& cmd)
 {
 	 if (!client.isRegistered())
 	{
@@ -275,9 +275,10 @@ void Server::handleJoin(Client& client, Command& cmd)
 		sendError(client, "476", channelName + " :Bad Channel Mask");
 		return;
 	}
-	if (_channels.find(channelName) == _channel.end())
+	if (_channels.find(channelName) == _channels.end())
 		_channels.insert(std::make_pair(channelName, Channel(channelName)));
 	Channel& channel = _channels[channelName];
+	channel.addMember(client.getFd());
 
 	std::string msg = ":" + client.getNick() + "!" + client.getUser() + "@localhost JOIN " + channelName + "\r\n";
 
@@ -304,17 +305,6 @@ void Server::sendWelcome(Client& client)
 {
 	std::string output = ":ircserv 001 " + client.getNick() + ":Welcome to our ircserv " + client.getNick() + "\r\n";
 	send(client.getFd(), output.c_str(), output.size(), 0);
-}
-
-void Server::broadcastToChannel(Channel& channel, td::string const& msg, int exceptFd)
-{
-	const std::set<int>& mem = channel.members();
-	for (std::set<int>::const_iterator it = mem.begin(); it != mem.end(); ++it)
-	{
-		int fd = *it;
-		if (fd == exceptFd) continue;
-		send(fd, msg.c_str(), msg.size(), 0);
-	}
 }
 
 

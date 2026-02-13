@@ -1,13 +1,12 @@
 NAME = ircserv
 
 CXX = c++
-CXXFLAGS = -Wall -Wextra -Werror -std=c++98
+CXXFLAGS = -Wall -Wextra -Werror -std=c++98 -Iincs
 
 SRCS =	srcs/main.cpp \
 		srcs/server.cpp \
 		srcs/client.cpp \
-		srcs/channel.cpp
-		
+		srcs/Channel.cpp
 
 OBJS = $(SRCS:.cpp=.o)
 
@@ -15,7 +14,6 @@ all: $(NAME)
 
 $(NAME): $(OBJS)
 	$(CXX) $(CXXFLAGS) $(OBJS) -o $(NAME)
-
 
 clean:
 	rm -f $(OBJS)

@@ -10,7 +10,7 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "../incs/client.hpp"
+#include "client.hpp"
 
 Client::Client(int fd) : _fd(fd), _passAccepted(false), _hasNick(false), _hasUser(false)
 {
