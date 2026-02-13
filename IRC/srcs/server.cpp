@@ -192,8 +192,10 @@ void Server::handleCommand(Client& client, const Command& cmd)
 		handleNick(client, cmd);
 	else if (cmd.name == "USER")
 		handleUser(client, cmd);
+	else if (cmd.name == "JOIN")
+		handleJoin(client, cmd);
 	else
-		sendError(client, "421", cmd.name + " :Unknown command");
+		sendError(client, "421", cmd.name + ":Unknown command");
 
 	if (client.isRegistered())
 		sendWelcome(client);
@@ -203,17 +205,17 @@ void Server::handlePass(Client& client, const Command& cmd)
 {
 	if (client.passAccepted())
 	{
-		sendError(client, "462", " :You may not reregister");
+		sendError(client, "462", ":You may not reregister");
 		return;
 	}
 	if (cmd.params.size() < 1)
 	{
-		sendError(client, "462", " PASS :Not enough parameters");
+		sendError(client, "461", "PASS :Not enough parameters");
 		return;
 	}
 	if (cmd.params[0] != _password)
 	{
-		sendError(client, "462", " :Password incorrect");
+		sendError(client, "464", ":Password incorrect");
 		return;
 	}
 	client.setPassAccepted(true);
@@ -223,18 +225,18 @@ void Server::handleNick(Client& client, const Command& cmd)
 {
 	if (!client.passAccepted())
 	{
-		sendError(client, "451", " :You have not registered");
+		sendError(client, "451", ":You have not registered");
 		return;
 	}
 	if (cmd.params.size() < 1)
 	{
-		sendError(client, "431", " * :No nickname given");
+		sendError(client, "431", "*:No nickname given");
 		return;
 	}
 	std::string nickname = cmd.params[0];
 	if (nicknameExists(nickname))
 	{
-		sendError(client, "433", " * " + nickname + " :Nickname is already use");
+		sendError(client, "433", "* " + nickname + " :Nickname is already use");
 		return;
 	}
 	client.setNick(nickname);
@@ -244,15 +246,42 @@ void Server::handleUser(Client& client, const Command& cmd)
 {
 	if (!client.passAccepted())
 	{
-		sendError(client, "451", " :You have not registered");
+		sendError(client, "451", ":You have not registered");
 		return;
 	}
 	if (cmd.params.size() < 4)
 	{
-		sendError(client, "461", " User :Not enough parameters");
+		sendError(client, "461", "User :Not enough parameters");
 		return;
 	}
 	client.setUser(cmd.params[0]);
+}
+
+void Server::handleJoin(Client& client, Command& cmd)
+{
+	 if (!client.isRegistered())
+	{
+		sendError(client, "451", ":You have not registered");
+		return;
+	}
+	if (cmd.params.size() < 1)
+	{
+		sendError(client, "461", "JOIN :Not enough parameters");
+		return;
+	}
+	std::string channelName = cmd.params[0];
+	if (channelName[0] != '#')
+	{
+		sendError(client, "476", channelName + " :Bad Channel Mask");
+		return;
+	}
+	if (_channels.find(channelName) == _channel.end())
+		_channels.insert(std::make_pair(channelName, Channel(channelName)));
+	Channel& channel = _channels[channelName];
+
+	std::string msg = ":" + client.getNick() + "!" + client.getUser() + "@localhost JOIN " + channelName + "\r\n";
+
+	broadcastToChannel(channel, msg, -1);
 }
 
 bool Server::nicknameExists(const std::string& nick)
@@ -276,6 +305,18 @@ void Server::sendWelcome(Client& client)
 	std::string output = ":ircserv 001 " + client.getNick() + ":Welcome to our ircserv " + client.getNick() + "\r\n";
 	send(client.getFd(), output.c_str(), output.size(), 0);
 }
+
+void Server::broadcastToChannel(Channel& channel, td::string const& msg, int exceptFd)
+{
+	const std::set<int>& mem = channel.members();
+	for (std::set<int>::const_iterator it = mem.begin(); it != mem.end(); ++it)
+	{
+		int fd = *it;
+		if (fd == exceptFd) continue;
+		send(fd, msg.c_str(), msg.size(), 0);
+	}
+}
+
 
 void Server::broadcastToChannel(Channel& channel, const std::string& msg, int exceptFd)
 {
