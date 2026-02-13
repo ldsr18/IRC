@@ -30,7 +30,6 @@
 #include <netinet/in.h> //sockaddr_in
 #include <arpa/inet.h> //htons
 #include <poll.h> //poll, pollfd
-#include "../incs/Channel.hpp"
 
 
 class Server
