@@ -1,4 +1,4 @@
-#include "Channel.hpp"
+#include "channel.hpp"
 
 Channel::Channel()
 : _name(""),
