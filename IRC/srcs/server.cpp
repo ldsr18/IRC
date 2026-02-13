@@ -119,7 +119,6 @@ bool Server::receiveFromClient(int clientFd)
 	if (it == _clients.end())
 		return (true); //ne devrait jamais arriver
 	Client& client = it->second;
-
 	// Ajout au buffer du client
 	client.getBuffer().append(buffer, bytes);
 
@@ -194,6 +193,8 @@ void Server::handleCommand(Client& client, const Command& cmd)
 		handleUser(client, cmd);
 	else if (cmd.name == "JOIN")
 		handleJoin(client, cmd);
+	else if (cmd.name == "INVITE")
+		handleInvite(client, cmd);
 	else
 		sendError(client, "421", cmd.name + " :Unknown command");
 
@@ -203,6 +204,72 @@ void Server::handleCommand(Client& client, const Command& cmd)
 		client.setWelcomed(true);
 	}
 }
+
+Channel* Server::findChannelByName(const std::string& name) {
+
+	std::map<std::string, Channel>::iterator it = _channels.find(name);
+	if(it == _channels.end())
+			return NULL;
+	return &it->second;
+}
+
+Client* Server::findClientByNick(const std::string& nick) {
+
+	std::map<int, Client>::iterator it;
+	for(it = _clients.begin(); it != _clients.end(); it++) {
+		if(it->second.getNick() == nick)
+			return &it->second;
+	}
+	return NULL;
+}
+
+// INVITE <nick> <#channel>
+void Server::handleInvite(Client& client, const Command& cmd)
+{
+	if (!client.isRegistered()) {
+		sendError(client, "451", " :You have not registered");
+		return;
+	}
+	if (cmd.params.size() < 2) {
+		sendError(client, "461", "INVITE :Not enough parameters");
+		return;
+	}
+
+	std::string const& targetNick  = cmd.params[0];
+	std::string const& channelName = cmd.params[1];
+	Channel* channel = findChannelByName(channelName);
+	if (!channel) {
+		sendError(client, "403", channelName + " :No such channel");
+		return;
+	}
+	if (!channel->hasMember(client.getFd())) {
+		sendError(client, "442", channelName + " :You're not on that channel");
+		return;
+	}
+	if (!channel->isModerator(client.getFd())) {
+		sendError(client, "482", channel->name() + " :You're not channel operator");
+		return;
+	}
+
+	Client* target = findClientByNick(targetNick);
+	if (!target) {
+		sendError(client, "401", targetNick + " :No such nick");
+		return;
+	}
+
+	if (channel->hasMember(target->getFd())) {
+		sendError(client, "443", targetNick + " " + channelName + " :is already on channel");
+		return;
+	}
+	if (channel->isInvited(target->getFd())) {
+		sendError(client, "443", targetNick + " " + channelName + " :is already invited");
+		return;
+	}
+	channel->invite(target->getFd());
+	sendInvit(client, *target, *channel);
+	sendReply(client, *target, *channel, "341");
+}
+
 
 void Server::handlePass(Client& client, const Command& cmd)
 {
@@ -290,6 +357,7 @@ void Server::handleJoin(Client& client, const Command& cmd)
 	broadcastToChannel(channel, msg, -1);
 	sendNames(client, channel);
 }
+// PRIVMSG
 
 bool Server::nicknameExists(const std::string& nick)
 {
@@ -299,6 +367,22 @@ bool Server::nicknameExists(const std::string& nick)
 			return (true);
 	}
 	return (false);
+}
+
+// on dois tro
+
+void Server::sendReply(Client& client, Client& target, Channel& channel, std::string const& code) {
+	std::string output 		= ":ircserv " + code + " " + client.getNick() + " " 
+							+ target.getNick() + " " + channel.name() + "\r\n";
+	send(client.getFd(), output.c_str(), output.size(), 0);
+}
+
+void Server::sendInvit(Client& client, Client& target, Channel& channel)
+{
+	std::string output = 	":" + client.getNick() + "!" + client.getUser()
+							+ "@localhost INVITE "+ target.getNick() + " " 
+							+ channel.name() + "\r\n";
+	send(target.getFd(), output.c_str(), output.size(), 0);
 }
 
 void Server::sendError(Client& client, const std::string& code, const std::string& message)
@@ -345,3 +429,6 @@ void Server::broadcastToChannel(Channel& channel, const std::string& msg, int ex
         send(fd, msg.c_str(), msg.size(), 0);
     }
 }
+
+
+

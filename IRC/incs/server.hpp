@@ -60,10 +60,17 @@ class Server
 			void handleJoin(Client& client, const Command& cmd);
 			bool nicknameExists(const std::string& nick);
 
+			//channel
+			Channel* findChannelByName(const std::string& nick);
+			Client* findClientByNick(const std::string& nick);
+			void handleInvite(Client& client, const Command& cmd);
+
 			//réponses
 			void sendError(Client& client, const std::string& code, const std::string& message);
 			void sendWelcome(Client& client);
 			void sendNames(Client& client, Channel& channel);
+			void sendInvit(Client& client, Client& target, Channel& channel);
+			void sendReply(Client& client, Client& target, Channel& channel, std::string const& code);
 			void broadcastToChannel(Channel& channel, const std::string& msg, int exceptFd);
 
 	public:
