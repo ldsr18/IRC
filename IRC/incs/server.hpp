@@ -39,6 +39,7 @@ class Server
 
 			std::vector<struct pollfd> _fds;
 			std::map<int, Client> _clients;
+			std::map<std::string, Channel> _channels;
 
 			//réseau
 			void setupSocket(); //crée et prépare lee serveur
@@ -54,11 +55,13 @@ class Server
 			void handlePass(Client& client, const Command& cmd);
 			void handleNick(Client& client, const Command& cmd);
 			void handleUser(Client& client, const Command& cmd);
+			void handleJoin(Client& client, const Command& cmd);
 			bool nicknameExists(const std::string& nick);
 
 			//réponses
 			void sendError(Client& client, const std::string& code, const std::string& message);
 			void sendWelcome(Client& client);
+			void broadcastToChannel(Channel& channel, const std::string& msg, int exceptFd)
 
 	public:
 			Server(int port, const std::string& password);
