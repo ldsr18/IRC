@@ -64,6 +64,7 @@ class Server
 			//réponses
 			void sendError(Client& client, const std::string& code, const std::string& message);
 			void sendWelcome(Client& client);
+			void sendNames(Client& client, Channel& channel);
 			void broadcastToChannel(Channel& channel, const std::string& msg, int exceptFd);
 
 	public:

@@ -12,6 +12,10 @@
 
 #include "client.hpp"
 
+Client::Client() : _fd(-1), _passAccepted(false), _hasNick(false), _hasUser(false), _welcomed(false)
+{
+}
+
 Client::Client(int fd) : _fd(fd), _passAccepted(false), _hasNick(false), _hasUser(false), _welcomed(false)
 {
 }

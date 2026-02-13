@@ -288,6 +288,7 @@ void Server::handleJoin(Client& client, const Command& cmd)
 	
 	std::string msg = ":" + client.getNick() + "!" + client.getUser() + "@localhost JOIN " + channelName + "\r\n";
 	broadcastToChannel(channel, msg, -1);
+	sendNames(client, channel);
 }
 
 bool Server::nicknameExists(const std::string& nick)
@@ -312,6 +313,27 @@ void Server::sendWelcome(Client& client)
 	send(client.getFd(), output.c_str(), output.size(), 0);
 }
 
+void Server::sendNames(Client& client, Channel& channel)
+{
+	std::string list;
+	const std::set<int>& members = channel.members();
+
+	for (std::set<int>::const_iterator it = members.begin(); it != members.end(); ++it)
+	{
+		Client& member = _clients[*it];
+		if (channel.isModerator(*it))
+			list += "@";
+		list += member.getNick() + " ";
+	}
+	
+	if (!list.empty())
+		list.erase(list.size() - 1);
+	
+	std::string reply353 = ":ircserv 353 " + client.getNick() + " = " + channel.name() + " :" + list + "\r\n";
+	send(client.getFd(), reply353.c_str(), reply353.size(), 0);
+	std::string reply366 = ":ircserv 366 " + client.getNick() + " " + channel.name() + " :End of /NAMES list.\r\n";
+	send(client.getFd(), reply366.c_str(), reply366.size(), 0);
+}
 
 void Server::broadcastToChannel(Channel& channel, const std::string& msg, int exceptFd)
 {

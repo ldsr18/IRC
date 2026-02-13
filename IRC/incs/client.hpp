@@ -31,6 +31,7 @@ class Client
 			std::string _username;
 
 	public:
+			Client();
 			Client(int fd);
 
 			//getter d'état
