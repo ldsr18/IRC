@@ -5,8 +5,10 @@
 #include <string>
 #include <cstddef>
 
-class Channel {
+class Channel
+{
 	private :
+
 		std::string		_name;
 		std::set<int>	_members;
 		std::set<int>	_moderators;
@@ -19,7 +21,6 @@ class Channel {
 		bool _topicRestricted; 	// +t
 		bool _hasKey;
 		bool _hasLimit;
-
 
 	public:
 
@@ -65,8 +66,6 @@ class Channel {
 
 		size_t memberCount() const;
 		bool empty() const;
-
-
 };
 
 #endif

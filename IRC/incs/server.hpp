@@ -15,6 +15,7 @@
 
 #include "client.hpp"
 #include "command.hpp"
+#include "channel.hpp"
 
 #include <iostream>
 #include <cstring>
