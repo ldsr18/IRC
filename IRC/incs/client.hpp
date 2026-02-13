@@ -25,6 +25,7 @@ class Client
 			bool _passAccepted;
 			bool _hasNick;
 			bool _hasUser;
+			bool _welcomed;
 			
 			std::string _nickname;
 			std::string _username;
@@ -37,12 +38,14 @@ class Client
 			bool hasNick() const;
 			bool hasUser() const;
 			bool isRegistered() const;
+			bool hasWelcomed() const;
 
 			//getter
 			int getFd() const;
 			std::string& getBuffer();
 			const std::string& getNick() const;
 			const std::string& getUser() const;
+			void setWelcomed(bool value);
 
 			//setter
 			void setPassAccepted(bool value);

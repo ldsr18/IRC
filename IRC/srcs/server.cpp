@@ -195,17 +195,20 @@ void Server::handleCommand(Client& client, const Command& cmd)
 	else if (cmd.name == "JOIN")
 		handleJoin(client, cmd);
 	else
-		sendError(client, "421", cmd.name + ":Unknown command");
+		sendError(client, "421", cmd.name + " :Unknown command");
 
-	if (client.isRegistered())
+	if (client.isRegistered() && !client.hasWelcomed())
+	{
 		sendWelcome(client);
+		client.setWelcomed(true);
+	}
 }
 
 void Server::handlePass(Client& client, const Command& cmd)
 {
 	if (client.passAccepted())
 	{
-		sendError(client, "462", ":You may not reregister");
+		sendError(client, "462", " :You may not reregister");
 		return;
 	}
 	if (cmd.params.size() < 1)
@@ -215,7 +218,7 @@ void Server::handlePass(Client& client, const Command& cmd)
 	}
 	if (cmd.params[0] != _password)
 	{
-		sendError(client, "464", ":Password incorrect");
+		sendError(client, "464", " :Password incorrect");
 		return;
 	}
 	client.setPassAccepted(true);
@@ -225,12 +228,12 @@ void Server::handleNick(Client& client, const Command& cmd)
 {
 	if (!client.passAccepted())
 	{
-		sendError(client, "451", ":You have not registered");
+		sendError(client, "451", " :You have not registered");
 		return;
 	}
 	if (cmd.params.size() < 1)
 	{
-		sendError(client, "431", "*:No nickname given");
+		sendError(client, "431", " *:No nickname given");
 		return;
 	}
 	std::string nickname = cmd.params[0];
@@ -246,7 +249,7 @@ void Server::handleUser(Client& client, const Command& cmd)
 {
 	if (!client.passAccepted())
 	{
-		sendError(client, "451", ":You have not registered");
+		sendError(client, "451", " :You have not registered");
 		return;
 	}
 	if (cmd.params.size() < 4)
@@ -261,7 +264,7 @@ void Server::handleJoin(Client& client, const Command& cmd)
 {
 	 if (!client.isRegistered())
 	{
-		sendError(client, "451", ":You have not registered");
+		sendError(client, "451", " :You have not registered");
 		return;
 	}
 	if (cmd.params.size() < 1)
@@ -305,7 +308,7 @@ void Server::sendError(Client& client, const std::string& code, const std::strin
 
 void Server::sendWelcome(Client& client)
 {
-	std::string output = ":ircserv 001 " + client.getNick() + ":Welcome to our ircserv " + client.getNick() + "\r\n";
+	std::string output = ":ircserv 001 " + client.getNick() + " :Welcome to our ircserv " + client.getNick() + "\r\n";
 	send(client.getFd(), output.c_str(), output.size(), 0);
 }
 

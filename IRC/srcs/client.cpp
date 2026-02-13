@@ -12,7 +12,7 @@
 
 #include "client.hpp"
 
-Client::Client(int fd) : _fd(fd), _passAccepted(false), _hasNick(false), _hasUser(false)
+Client::Client(int fd) : _fd(fd), _passAccepted(false), _hasNick(false), _hasUser(false), _welcomed(false)
 {
 }
 
@@ -36,6 +36,11 @@ bool Client::isRegistered() const
 	return (_passAccepted && _hasNick && _hasUser);
 }
 
+bool Client::hasWelcomed() const
+{
+	return (_welcomed);
+}
+
 int Client::getFd() const
 {
 	return (_fd);
@@ -54,6 +59,11 @@ const std::string& Client::getNick() const
 const std::string& Client::getUser() const
 {
 	return (_username);
+}
+
+void Client::setWelcomed(bool value)
+{
+	_welcomed = value;
 }
 
 void Client::setPassAccepted(bool value)
