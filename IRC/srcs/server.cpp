@@ -278,10 +278,12 @@ void Server::handleJoin(Client& client, const Command& cmd)
 	if (_channels.find(channelName) == _channels.end())
 		_channels.insert(std::make_pair(channelName, Channel(channelName)));
 	Channel& channel = _channels[channelName];
+	
 	channel.addMember(client.getFd());
-
+	if (channel.memberCount() == 1)
+		channel.addModerator(client.getFd());
+	
 	std::string msg = ":" + client.getNick() + "!" + client.getUser() + "@localhost JOIN " + channelName + "\r\n";
-
 	broadcastToChannel(channel, msg, -1);
 }
 
