@@ -29,6 +29,8 @@
 #include <netinet/in.h> //sockaddr_in
 #include <arpa/inet.h> //htons
 #include <poll.h> //poll, pollfd
+#include "../incs/Channel.hpp"
+
 
 class Server
 {
@@ -36,6 +38,7 @@ class Server
 			int _port;
 			int _serverFd; //fd du serveur = le socket qui écoute
 			std::string _password;
+			std::map<std::string, Channel> _channels;
 
 			std::vector<struct pollfd> _fds;
 			std::map<int, Client> _clients;
