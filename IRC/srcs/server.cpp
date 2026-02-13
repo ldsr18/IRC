@@ -276,3 +276,14 @@ void Server::sendWelcome(Client& client)
 	std::string output = ":ircserv 001 " + client.getNick() + ":Welcome to our ircserv " + client.getNick() + "\r\n";
 	send(client.getFd(), output.c_str(), output.size(), 0);
 }
+
+void Server::broadcastToChannel(Channel& channel, const std::string& msg, int exceptFd)
+{
+    const std::set<int>& mem = channel.members();
+    for (std::set<int>::const_iterator it = mem.begin(); it != mem.end(); ++it)
+    {
+        int fd = *it;
+        if (fd == exceptFd) continue;
+        send(fd, msg.c_str(), msg.size(), 0);
+    }
+}

@@ -63,6 +63,8 @@ class Server
 			void sendError(Client& client, const std::string& code, const std::string& message);
 			void sendWelcome(Client& client);
 
+			void broadcastToChannel(Channel& channel, const std::string& msg, int exceptFd);
+
 	public:
 			Server(int port, const std::string& password);
 			~Server();

@@ -23,6 +23,7 @@ class Channel {
 
 	public:
 
+		Channel();
 		Channel(std::string name);
 		~Channel();
 
