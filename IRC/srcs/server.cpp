@@ -199,6 +199,8 @@ void Server::handleCommand(Client& client, const Command& cmd)
 		handleKick(client, cmd);
 	else if (cmd.name == "TOPIC")
 		handleTopic(client, cmd);
+	else if (cmd.name == "MODE")
+		handleMode(client, cmd);
 	else
 		sendError(client, "421", cmd.name + " :Unknown command");
 
@@ -227,10 +229,65 @@ Client* Server::findClientByNick(const std::string& nick) {
 	return NULL;
 }
 
+void Server::sendMode(Client& client, std::string channelName, std::string&  modes, std::string&  params) {
+	std::string output 		= ":ircserv 324 " + client.getNick() + " " + channelName + " " + modes;
+	if(!params.empty())
+		output += " " + params;
+	output += "\r\n";
+	send(client.getFd(), output.c_str(), output.size(), 0);
+}
 
-// TOPIC #chan → affiche le topic (ou “no topic is set”)
-// TOPIC #chan :nouveau topic → change le topic
-// Si le channel est en mode +t : seuls les ops peuvent modifier.
+static std::string toString(size_t n) {
+    std::ostringstream oss;
+    oss << n;
+    return oss.str();
+}
+
+void Server::handleMode(Client& client, const Command& cmd) {
+	if(!client.isRegistered()) {
+		sendError(client, "451", " :You have not registered");
+		return;
+	}
+	if(cmd.params.size() < 1) {
+		sendError(client, "461", "MODE :Not enough parameters");
+		return;
+	}
+	std::string channelName = cmd.params[0];
+	Channel *channel = findChannelByName(channelName);
+	if(!channel) {
+		sendError(client, "403", channelName + " :No such channel");
+		return;
+	}
+	if(!channel->hasMember(client.getFd())) {
+		sendError(client, "442", channelName + " :You're not on that channel");
+		return;
+	}
+	if(cmd.params.size() == 1) {
+		std::string modes = "+";
+		std::string params;
+
+		if(channel->isInviteOnly())
+			modes += "i";
+		if(channel->isTopicRestricted())
+			modes += "t";
+		if(channel->hasKey())
+			modes += "k";
+		if(channel->hasLimit())
+			modes += "l";
+		if(channel->hasKey() && channel->isModerator(client.getFd()))
+			params += channel->getKEy();
+		if(channel->hasLimit()) {
+			if(!params.empty())
+				params += " ";
+			params += toString(channel->limit());
+		}
+
+		sendMode(client, channelName, modes, params);
+		return;
+	}
+
+
+}
 
 void Server::handleTopic(Client& client, const Command& cmd) {
 	if(!client.isRegistered()) {
@@ -273,7 +330,7 @@ void Server::handleTopic(Client& client, const Command& cmd) {
 
 
 //KICK #a <nickB> :bye
-void	Server::handleKick(Client &client, Command const& cmd) {
+void	Server::handleKick(Client &client, const Command& cmd) {
 	
 
 	if(!client.isRegistered()) {

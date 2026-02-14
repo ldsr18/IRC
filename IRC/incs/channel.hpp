@@ -52,6 +52,7 @@ class Channel
 		void	uninvite(int fd);
 
 		//	Key (+k)
+		std::string const& getKEy() const;
 		bool	hasKey() const;
 		bool	checkKey(const std::string& key) const;
 		void	setKey(const std::string& key);

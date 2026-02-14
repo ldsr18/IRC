@@ -100,6 +100,10 @@ void	Channel::uninvite(int fd)
 }
 
 //	Key (+k)
+std::string const& Channel::getKEy() const {
+	return _key;
+}
+
 bool	Channel::hasKey() const
 { 
 	return _hasKey;
