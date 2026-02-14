@@ -61,6 +61,7 @@ class Server
 			bool nicknameExists(const std::string& nick);
 
 			//channel
+			void	handleKick(Client &client, Command const& cmd);
 			Channel* findChannelByName(const std::string& nick);
 			Client* findClientByNick(const std::string& nick);
 			void handleInvite(Client& client, const Command& cmd);
