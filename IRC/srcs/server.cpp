@@ -185,7 +185,7 @@ Command Server::parseCommand(const std::string& line)
 
 void Server::handleCommand(Client& client, const Command& cmd)
 {
-	if (cmd.name == "PASS")
+	if 		(cmd.name == "PASS")
 		handlePass(client, cmd);
 	else if (cmd.name == "NICK")
 		handleNick(client, cmd);
@@ -197,6 +197,8 @@ void Server::handleCommand(Client& client, const Command& cmd)
 		handleInvite(client, cmd);
 	else if (cmd.name == "KICK")
 		handleKick(client, cmd);
+	else if (cmd.name == "TOPIC")
+		handleTopic(client, cmd);
 	else
 		sendError(client, "421", cmd.name + " :Unknown command");
 
@@ -224,6 +226,51 @@ Client* Server::findClientByNick(const std::string& nick) {
 	}
 	return NULL;
 }
+
+
+// TOPIC #chan → affiche le topic (ou “no topic is set”)
+// TOPIC #chan :nouveau topic → change le topic
+// Si le channel est en mode +t : seuls les ops peuvent modifier.
+
+void Server::handleTopic(Client& client, const Command& cmd) {
+	if(!client.isRegistered()) {
+		sendError(client, "451", " :You have not registered");
+		return;
+	}
+	if(cmd.params.size() < 1) {
+		sendError(client, "461", "TOPIC :Not enough parameters");
+		return;
+	}
+	std::string const& channelName = cmd.params[0];
+	Channel *channel = findChannelByName(channelName);
+	if(!channel) {
+		sendError(client, "403", channelName + " :No such channel");
+		return;
+	}
+	if(!channel->hasMember(client.getFd())) {
+		sendError(client, "442", channelName + " :You're not on that channel");
+		return;
+	}
+	if(cmd.params.size() == 1) {
+		if(channel->topic() == "")
+			sendTopic(client, *channel, "331", " :No topic is set");
+		else
+			sendTopic(client, *channel, "332", " :" + channel->topic());
+		return;
+	}
+	if( channel->isTopicRestricted() && !channel->isModerator(client.getFd())) {
+		sendError(client, "482", channelName + " :You're not channel operator");
+		return;
+	}
+    std::string const& newTopic = cmd.params[1];
+    channel->setTopic(newTopic);
+
+    std::string msg = ":" + client.getNick() + "!" + client.getUser()
+                    + "@localhost TOPIC " + channel->name()
+                    + " :" + newTopic + "\r\n";
+    broadcastToChannel(*channel, msg, -1);
+}
+
 
 //KICK #a <nickB> :bye
 void	Server::handleKick(Client &client, Command const& cmd) {
@@ -420,6 +467,14 @@ bool Server::nicknameExists(const std::string& nick)
 
 // on dois tro
 
+//:ircserv 332 <nick> <#chan> :<topic>
+void Server::sendTopic(Client& client, Channel& channel, std::string const& code, const std::string& message) {
+	std::string output 		= ":ircserv " + code + " " + client.getNick() + " " 
+							+ channel.name() + message + "\r\n";
+	send(client.getFd(), output.c_str(), output.size(), 0);
+}
+
+
 void Server::sendReply(Client& client, Client& target, Channel& channel, std::string const& code) {
 	std::string output 		= ":ircserv " + code + " " + client.getNick() + " " 
 							+ target.getNick() + " " + channel.name() + "\r\n";
@@ -470,8 +525,8 @@ void Server::sendNames(Client& client, Channel& channel)
 
 void Server::broadcastToChannel(Channel& channel, const std::string& msg, int exceptFd)
 {
-    const std::set<int>& mem = channel.members();
-    for (std::set<int>::const_iterator it = mem.begin(); it != mem.end(); ++it)
+    const std::set<int>& mbrs = channel.members();
+    for (std::set<int>::const_iterator it = mbrs.begin(); it != mbrs.end(); ++it)
     {
         int fd = *it;
         if (fd == exceptFd) continue;

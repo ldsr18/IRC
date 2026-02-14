@@ -65,6 +65,14 @@ void	Channel::setTopic(const std::string& t)
 	_topic = t;
 }
 
+bool 	Channel::isTopicRestricted() const {
+	return _topicRestricted;
+}
+
+void 	Channel::setTopicRestricted(bool tr) {
+	_topicRestricted = tr;
+}
+
 // Invites (+i)
 bool	Channel::isInviteOnly() const
 { 

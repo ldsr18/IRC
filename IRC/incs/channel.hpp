@@ -40,6 +40,9 @@ class Channel
 		//	Topic
 		std::string const& topic() const;
 		void	setTopic(const std::string&);
+		bool 	isTopicRestricted() const;
+		void 	setTopicRestricted(bool tr);
+
 
 		// Invites (+i)
 		bool	isInviteOnly() const;

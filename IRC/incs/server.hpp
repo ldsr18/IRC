@@ -61,15 +61,18 @@ class Server
 			bool nicknameExists(const std::string& nick);
 
 			//channel
-			void	handleKick(Client &client, Command const& cmd);
+
 			Channel* findChannelByName(const std::string& nick);
-			Client* findClientByNick(const std::string& nick);
-			void handleInvite(Client& client, const Command& cmd);
+			Client*	findClientByNick(const std::string& nick);
+			void 	handleTopic(Client& client, const Command& cmd);
+			void	handleKick(Client &client, Command const& cmd);
+			void 	handleInvite(Client& client, const Command& cmd);
 
 			//réponses
 			void sendError(Client& client, const std::string& code, const std::string& message);
 			void sendWelcome(Client& client);
 			void sendNames(Client& client, Channel& channel);
+			void sendTopic(Client& client, Channel& channel, std::string const& code, const std::string& message);
 			void sendInvit(Client& client, Client& target, Channel& channel);
 			void sendReply(Client& client, Client& target, Channel& channel, std::string const& code);
 			void broadcastToChannel(Channel& channel, const std::string& msg, int exceptFd);
