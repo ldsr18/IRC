@@ -299,6 +299,7 @@ void Server::handleMode(Client& client, const Command& cmd) {
 	}
 	char sign = modeStr[0];
 	int paramsCnt = cmd.params.size();
+	int paramsIdx = 2;
 	for(size_t i = 1; i < modeStr.length(); i++) {
 		if (modeStr[i] == '+' || modeStr[i] == '-' ) {
 			sign = modeStr[i];
@@ -318,11 +319,58 @@ void Server::handleMode(Client& client, const Command& cmd) {
 			}
 		}
 		else if (modeStr[i] == 'i') {
-
+			bool oldValue = channel->isInviteOnly();
+			if(sign == '+')
+				channel->setInviteOnly(true);
+			else if(sign == '-')
+				channel->setInviteOnly(false);
+			if(oldValue != channel->isInviteOnly()) {
+					std::string msg = 	":" + client.getNick() + "!" + client.getUser()
+										+ "@localhost MODE " + channelName + " " + std::string(1, sign) + "i" + "\r\n";
+					broadcastToChannel(*channel, msg, -1);
+			}
 		}
 		else if (modeStr[i] == 'k') {
-			(void)paramsCnt;
+			bool oldHasKey = channel->hasKey();
+			std::string oldKey;
+			if (oldHasKey)
+				oldKey = channel->getKEy();
+
+			std::string newKey;
+
+			if (sign == '+') {
+				if (paramsIdx >= paramsCnt) {
+					sendError(client, "461", "MODE :Not enough parameters");
+					return;
+				}
+				newKey = cmd.params[paramsIdx];
+				channel->setKey(newKey);
+				paramsIdx++;
+			}
+			else if (sign == '-')
+				channel->clearKey();
+
+			bool changed = false;
+			if (sign == '+') {
+				if (!oldHasKey)
+					changed = true;
+				else {
+					if (oldKey != newKey)
+						changed = true;
+				}
+			}
+			else if (sign == '-') {
+				if (oldHasKey)
+					changed = true;
+			}
+
+			if (changed) {
+				std::string msg = ":" + client.getNick() + "!" + client.getUser()
+					+ "@localhost MODE " + channelName + " " + std::string(1, sign) + "k\r\n";
+				broadcastToChannel(*channel, msg, -1);
+			}
 		}
+
 		else if (modeStr[i] == 'l') {
 
 		}
