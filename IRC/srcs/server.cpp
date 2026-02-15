@@ -262,6 +262,7 @@ void Server::handleMode(Client& client, const Command& cmd) {
 		sendError(client, "442", channelName + " :You're not on that channel");
 		return;
 	}
+	// MODE #channel
 	if(cmd.params.size() == 1) {
 		std::string modes = "+";
 		std::string params;
@@ -285,7 +286,56 @@ void Server::handleMode(Client& client, const Command& cmd) {
 		sendMode(client, channelName, modes, params);
 		return;
 	}
+	//MODE #channel <args>
+	//MODE #t +t` / `MODE #t -t
+	std::string modeStr = cmd.params[1];
+	if(modeStr[0] != '+' && modeStr[0] != '-') {
+		sendError(client, "501", client.getNick() + " :Unknown MODE flag");
+		return;
+	}
+	char sign = modeStr[0];
+	int paramsCnt = cmd.params.size();
+	for(size_t i = 1; i < modeStr.length(); i++) {
+		if (modeStr[i] == '+' || modeStr[i] == '-' ) {
+			sign = modeStr[i];
+			continue;
+		}
+		else if	(modeStr[i] == 't') {
+			if(!channel->isModerator(client.getFd()))  {
+				sendError(client, "482", channelName + " :You're not channel operator");
+				return;
+			}
+			bool oldValue = channel->isTopicRestricted();
+			if(sign == '+')
+				channel->setTopicRestricted(true);
+			else if(sign == '-')
+				channel->setTopicRestricted(false);
+			if(oldValue != channel->isTopicRestricted()) {
+					std::string msg = 	":" + client.getNick() + "!" + client.getUser()
+										+ "@localhost MODE #t" + "\r\n";
+					broadcastToChannel(*channel, msg, -1);
+			}
 
+
+		}
+		else if (modeStr[i] == 'i') {
+
+		}
+		else if (modeStr[i] == 'k') {
+			(void)paramsCnt;
+		}
+		else if (modeStr[i] == 'l') {
+
+		}
+		else if (modeStr[i] == 'o') {
+
+		}
+		else {
+			std::string x(1, modeStr[i]);
+			sendError(client, "472", client.getNick() + " " + x + " :is unknown mode char to me");
+			return;
+		}
+	}
 
 }
 
@@ -319,13 +369,13 @@ void Server::handleTopic(Client& client, const Command& cmd) {
 		sendError(client, "482", channelName + " :You're not channel operator");
 		return;
 	}
-    std::string const& newTopic = cmd.params[1];
-    channel->setTopic(newTopic);
+	std::string const& newTopic = cmd.params[1];
+	channel->setTopic(newTopic);
 
-    std::string msg = ":" + client.getNick() + "!" + client.getUser()
-                    + "@localhost TOPIC " + channel->name()
-                    + " :" + newTopic + "\r\n";
-    broadcastToChannel(*channel, msg, -1);
+	std::string msg = ":" + client.getNick() + "!" + client.getUser()
+					+ "@localhost TOPIC " + channel->name()
+					+ " :" + newTopic + "\r\n";
+	broadcastToChannel(*channel, msg, -1);
 }
 
 
