@@ -244,6 +244,7 @@ static std::string toString(size_t n) {
 }
 
 void Server::handleMode(Client& client, const Command& cmd) {
+
 	if(!client.isRegistered()) {
 		sendError(client, "451", " :You have not registered");
 		return;
@@ -275,8 +276,6 @@ void Server::handleMode(Client& client, const Command& cmd) {
 			modes += "k";
 		if(channel->hasLimit())
 			modes += "l";
-		if(channel->hasKey() && channel->isModerator(client.getFd()))
-			params += channel->getKEy();
 		if(channel->hasLimit()) {
 			if(!params.empty())
 				params += " ";
@@ -288,10 +287,15 @@ void Server::handleMode(Client& client, const Command& cmd) {
 	}
 	//MODE #channel <args>
 	//MODE #t +t` / `MODE #t -t
+	
 	std::string modeStr = cmd.params[1];
 	if(modeStr[0] != '+' && modeStr[0] != '-') {
 		sendError(client, "501", client.getNick() + " :Unknown MODE flag");
 		return;
+	}
+	if(!channel->isModerator(client.getFd()))  {
+				sendError(client, "482", channelName + " :You're not channel operator");
+				return;
 	}
 	char sign = modeStr[0];
 	int paramsCnt = cmd.params.size();
@@ -301,10 +305,7 @@ void Server::handleMode(Client& client, const Command& cmd) {
 			continue;
 		}
 		else if	(modeStr[i] == 't') {
-			if(!channel->isModerator(client.getFd()))  {
-				sendError(client, "482", channelName + " :You're not channel operator");
-				return;
-			}
+			
 			bool oldValue = channel->isTopicRestricted();
 			if(sign == '+')
 				channel->setTopicRestricted(true);
@@ -312,11 +313,9 @@ void Server::handleMode(Client& client, const Command& cmd) {
 				channel->setTopicRestricted(false);
 			if(oldValue != channel->isTopicRestricted()) {
 					std::string msg = 	":" + client.getNick() + "!" + client.getUser()
-										+ "@localhost MODE #t" + "\r\n";
+										+ "@localhost MODE " + channelName + " " + std::string(1, sign) + "t" + "\r\n";
 					broadcastToChannel(*channel, msg, -1);
 			}
-
-
 		}
 		else if (modeStr[i] == 'i') {
 
