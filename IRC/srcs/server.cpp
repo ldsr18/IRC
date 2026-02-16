@@ -201,6 +201,8 @@ void Server::handleCommand(Client& client, const Command& cmd)
 		handleTopic(client, cmd);
 	else if (cmd.name == "MODE")
 		handleMode(client, cmd);
+	else if (cmd.name == "PRIVMSG")
+		handlePrivMSG(client, cmd);
 	else
 		sendError(client, "421", cmd.name + " :Unknown command");
 
@@ -579,7 +581,7 @@ void Server::handleUser(Client& client, const Command& cmd)
 
 void Server::handleJoin(Client& client, const Command& cmd)
 {
-	 if (!client.isRegistered())
+	if (!client.isRegistered())
 	{
 		sendError(client, "451", " :You have not registered");
 		return;
@@ -607,7 +609,55 @@ void Server::handleJoin(Client& client, const Command& cmd)
 	broadcastToChannel(channel, msg, -1);
 	sendNames(client, channel);
 }
-// PRIVMSG
+
+void Server::handlePrivMSG(Client& client, const Command& cmd)
+{
+	if (!client.isRegistered())
+	{
+		sendError(client, "451", " :You have not registered");
+		return;
+	}
+	if (cmd.params.size() < 1)
+	{
+		sendError(client, "411 ", client.getNick() + " :No recipient given (PRIVMSG)");
+		return;
+	}
+	if (cmd.params.size() < 2)
+	{
+		sendError(client, "412 ", client.getNick() + " :No text to send");
+		return;
+	}
+	std::string target = cmd.params[0];
+	std::string message = cmd.params[1];
+
+	if (target[0] == '#')
+	{
+		Channel* channel = findChannelByName(target);
+		if (!channel)
+		{
+			sendError(client, "403 ", target + " :No such channel");
+			return;
+		}
+		if (!channel->hasMember(client.getFd()))
+		{
+			sendError(client, "403 ", target + " :Cannot send to nick/channel");
+			return;
+		}
+		std::string output = ":" + client.getNick() + "!" + client.getUser() + "@localhost PRIVMSG " + target + " :" + message + "\r\n";
+		broadcastToChannel(*channel, output, client.getFd());
+	}
+	else
+	{
+		Client* targetClient = findClientByNick(target);
+		if (!targetClient)
+		{
+			sendError(client, "401 ", target + " :No such nick/channel");
+			return;
+		}
+		std::string output = ":" + client.getNick() + "!" + client.getUser() + "@localhost PRIVMSG " + target + " :" + message + "\r\n";
+		send(targetClient->getFd(), output.c_str(), output.size(), 0);
+	}
+}
 
 bool Server::nicknameExists(const std::string& nick)
 {
@@ -645,7 +695,7 @@ void Server::sendInvit(Client& client, Client& target, Channel& channel)
 
 void Server::sendError(Client& client, const std::string& code, const std::string& message)
 {
-	std::string output = ":ircserv " + code + " * " + message + "\r\n";
+	std::string output = ":ircserv " + code + message + "\r\n";
 	send(client.getFd(), output.c_str(), output.size(), 0);
 }
 
