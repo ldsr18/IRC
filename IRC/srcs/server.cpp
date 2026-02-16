@@ -372,6 +372,51 @@ void Server::handleMode(Client& client, const Command& cmd) {
 		}
 
 		else if (modeStr[i] == 'l') {
+			bool oldHaslimit = channel->hasLimit();
+			std::string oldLimit;
+			if(oldHaslimit)
+				oldLimit = channel->limit();
+			
+			std::string newLimits;
+			size_t limit = 0;
+
+			if(sign == '+') {
+				if(paramsIdx >= paramsCnt) {
+					sendError(client, "461", "MODE :Not enough parameters");
+					return;
+				}
+				newLimits = cmd.params[paramsIdx];
+				std::istringstream iss(newLimits);
+				if (!(iss >> limit) || limit == 0) {
+					sendError(client, "461", "MODE :Invalid limit");
+					return;
+				}
+
+				channel->setLimit(limit);
+				paramsIdx++;
+			}
+			else if(sign == '-')
+				channel->clearLimit();
+
+			bool changed = false;
+			if(sign == '+') {
+				if(!oldHaslimit)
+					changed = true;
+				else {
+					if(oldLimit != newLimits)
+						changed = true;
+				}
+			}
+			else if (sign == '-') {
+				if (!oldHaslimit)
+					changed = true;
+			}
+
+			if (changed) {
+				std::string msg = ":" + client.getNick() + "!" + client.getUser()
+					+ "@localhost MODE " + channelName + " " + std::string(1, sign) + "l\r\n";
+				broadcastToChannel(*channel, msg, -1);
+			}
 
 		}
 		else if (modeStr[i] == 'o') {
