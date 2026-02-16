@@ -201,6 +201,8 @@ void Server::handleCommand(Client& client, const Command& cmd)
 		handleTopic(client, cmd);
 	else if (cmd.name == "MODE")
 		handleMode(client, cmd);
+	else if (cmd.name == "PING")
+    	handlePing(client, cmd);
 	else
 		sendError(client, "421", cmd.name + " :Unknown command");
 
@@ -243,8 +245,15 @@ static std::string toString(size_t n) {
     return oss.str();
 }
 
-void Server::handleMode(Client& client, const Command& cmd) {
+void Server::handlePing(Client& client, const Command& cmd) {
+	if (cmd.params.empty())
+		return;
 
+	std::string reply = ":ircserv PONG :" + cmd.params[0] + "\r\n";
+	send(client.getFd(), reply.c_str(), reply.size(), 0);
+}
+
+void Server::handleMode(Client& client, const Command& cmd) {
 	if(!client.isRegistered()) {
 		sendError(client, "451", " :You have not registered");
 		return;
@@ -253,6 +262,8 @@ void Server::handleMode(Client& client, const Command& cmd) {
 		sendError(client, "461", "MODE :Not enough parameters");
 		return;
 	}
+	if (cmd.params[0][0] != '#')
+    	return;
 	std::string channelName = cmd.params[0];
 	Channel *channel = findChannelByName(channelName);
 	if(!channel) {
@@ -762,6 +773,10 @@ void Server::sendNames(Client& client, Channel& channel)
 	send(client.getFd(), reply366.c_str(), reply366.size(), 0);
 }
 
+#include <cerrno>
+#include <cstring>
+#include <iostream>
+
 void Server::broadcastToChannel(Channel& channel, const std::string& msg, int exceptFd)
 {
     const std::set<int>& mbrs = channel.members();
@@ -769,9 +784,20 @@ void Server::broadcastToChannel(Channel& channel, const std::string& msg, int ex
     {
         int fd = *it;
         if (fd == exceptFd) continue;
-        send(fd, msg.c_str(), msg.size(), 0);
+
+        ssize_t n = send(fd, msg.c_str(), msg.size(), 0);
+        if (n < 0) {
+            std::cout << "[SEND FAIL] fd=" << fd
+                      << " len=" << msg.size()
+                      << " errno=" << errno
+                      << " (" << std::strerror(errno) << ")\n";
+        } else if ((size_t)n != msg.size()) {
+            std::cout << "[SEND PARTIAL] fd=" << fd
+                      << " sent=" << n << "/" << msg.size() << "\n";
+        }
     }
 }
+
 
 
 
