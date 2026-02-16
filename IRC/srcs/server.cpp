@@ -373,7 +373,7 @@ void Server::handleMode(Client& client, const Command& cmd) {
 
 		else if (modeStr[i] == 'l') {
 			bool oldHaslimit = channel->hasLimit();
-			std::string oldLimit;
+			size_t oldLimit = 0;
 			if(oldHaslimit)
 				oldLimit = channel->limit();
 			
@@ -387,7 +387,8 @@ void Server::handleMode(Client& client, const Command& cmd) {
 				}
 				newLimits = cmd.params[paramsIdx];
 				std::istringstream iss(newLimits);
-				if (!(iss >> limit) || limit == 0) {
+				char extra;
+				if (!(iss >> limit) || iss >> extra || limit == 0) {
 					sendError(client, "461", "MODE :Invalid limit");
 					return;
 				}
@@ -403,24 +404,54 @@ void Server::handleMode(Client& client, const Command& cmd) {
 				if(!oldHaslimit)
 					changed = true;
 				else {
-					if(oldLimit != newLimits)
+					if(oldLimit != limit)
 						changed = true;
 				}
 			}
 			else if (sign == '-') {
-				if (!oldHaslimit)
+				if (oldHaslimit)
 					changed = true;
 			}
 
 			if (changed) {
 				std::string msg = ":" + client.getNick() + "!" + client.getUser()
-					+ "@localhost MODE " + channelName + " " + std::string(1, sign) + "l\r\n";
+								+ "@localhost MODE " + channelName + " " + std::string(1, sign) + "l";
+				if (sign == '+')
+					msg += " " + toString(limit);
+				msg += "\r\n";
 				broadcastToChannel(*channel, msg, -1);
 			}
 
 		}
 		else if (modeStr[i] == 'o') {
+			if(paramsIdx >= paramsCnt) {
+				sendError(client, "461", "MODE :Not enough parameters");
+				return;
+			}
+			std::string targetNick = cmd.params[paramsIdx];
+			paramsIdx++;
 
+			Client* clientTarget = findClientByNick(targetNick);
+			if(!clientTarget) {
+				sendError(client, "401", targetNick + " :No such nick");
+				return;
+			}
+
+			if(!channel->hasMember(clientTarget->getFd())) {
+				sendError(client, "441", targetNick + " " + channelName + " :They aren't on that channel");
+				return;
+			}
+
+			bool changed = false;
+			if(sign == '+')
+				changed = channel->addModerator(clientTarget->getFd());
+			else if(sign == '-')
+				changed = channel->removeModerator(clientTarget->getFd());
+			if(changed) {
+				std::string msg = 	":" + client.getNick() + "!" + client.getUser()
+									+ "@localhost MODE " + channelName + " " + std::string(1, sign) + "o " + targetNick + "\r\n";
+				broadcastToChannel(*channel, msg, -1);
+			}
 		}
 		else {
 			std::string x(1, modeStr[i]);
