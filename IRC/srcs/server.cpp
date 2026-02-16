@@ -307,7 +307,7 @@ void Server::handleMode(Client& client, const Command& cmd) {
 		}
 		else if	(modeStr[i] == 't') {
 			
-			bool oldValue = channel->isTopicRestricted();
+			bool oldValue = channel->isTopicRestricted(); //+t -
 			if(sign == '+')
 				channel->setTopicRestricted(true);
 			else if(sign == '-')
@@ -576,7 +576,7 @@ void Server::handleUser(Client& client, const Command& cmd)
 	}
 	client.setUser(cmd.params[0]);
 }
-
+// JOIN #chan
 void Server::handleJoin(Client& client, const Command& cmd)
 {
 	 if (!client.isRegistered())
@@ -598,6 +598,15 @@ void Server::handleJoin(Client& client, const Command& cmd)
 	if (_channels.find(channelName) == _channels.end())
 		_channels.insert(std::make_pair(channelName, Channel(channelName)));
 	Channel& channel = _channels[channelName];
+	// JOIN #chan 
+
+	if(channel.isInviteOnly()) //if #chan +i
+	{
+		if(!channel.isInvited(client.getFd())) {
+			sendError(client, "473", client.getNick() + channelName + " :Cannot join channel (+i)");
+			return;
+		}
+	}
 	
 	channel.addMember(client.getFd());
 	if (channel.memberCount() == 1)
