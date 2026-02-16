@@ -65,6 +65,7 @@ class Server
 
 			Channel* findChannelByName(const std::string& nick);
 			Client*	findClientByNick(const std::string& nick);
+			void	handlePrivMSG(Client& client, const Command& cmd);
 			void	handlePing(Client& client, const Command& cmd);
 			void	handleMode(Client& client, const Command& cmd);
 			void 	handleTopic(Client& client, const Command& cmd);
