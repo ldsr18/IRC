@@ -693,8 +693,21 @@ void Server::handleJoin(Client& client, const Command& cmd)
 			sendError(client, "473", client.getNick() + channelName + " :Cannot join channel (+i)");
 			return;
 		}
+		channel.uninvite(client.getFd());
 	}
-	
+	if (channel.isFull()) {
+		sendError(client, "471", channelName + " :Cannot join channel (+l)");
+		return;
+	}
+	if (channel.hasKey()) {
+		std::string key = (cmd.params.size() >= 2) ? cmd.params[1] : "";
+		if (!channel.checkKey(key)) {
+			sendError(client, "475", channelName + " :Cannot join channel (+k)");
+			return;
+	}
+}
+
+
 	channel.addMember(client.getFd());
 	if (channel.memberCount() == 1)
 		channel.addModerator(client.getFd());

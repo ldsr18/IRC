@@ -54,6 +54,7 @@ class Server
 			void handleCommand(Client& client, const Command& cmd);
 
 			//gestion authentification
+			
 			void handlePass(Client& client, const Command& cmd);
 			void handleNick(Client& client, const Command& cmd);
 			void handleUser(Client& client, const Command& cmd);
