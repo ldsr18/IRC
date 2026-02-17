@@ -27,14 +27,14 @@ Client::Client(const Client& copy)
 
 Client& Client::operator=(const Client& src)
 {
-	if (this != &other)
+	if (this != &src)
 	{
 		_fd = src._fd;
 		_buffer = src._buffer;
-		_passAccepted = src._passAccepted
+		_passAccepted = src._passAccepted;
 		_hasNick = src._hasNick;
 		_hasUser = src._hasUser;
-		_welcomed = src. _welcomed;
+		_welcomed = src._welcomed;
 		_nickname = src._nickname;
 		_username = src._username;
 	}
