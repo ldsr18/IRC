@@ -203,6 +203,8 @@ void Server::handleCommand(Client& client, const Command& cmd)
 		handleMode(client, cmd);
 	else if (cmd.name == "PRIVMSG")
 		handlePrivMSG(client, cmd);
+	else if (cmd.name == "PING")
+    	handlePing(client, cmd);
 	else
 		sendError(client, "421", cmd.name + " :Unknown command");
 
@@ -245,16 +247,25 @@ static std::string toString(size_t n) {
     return oss.str();
 }
 
-void Server::handleMode(Client& client, const Command& cmd) {
+void Server::handlePing(Client& client, const Command& cmd) {
+	if (cmd.params.empty())
+		return;
 
+	std::string reply = ":ircserv PONG :" + cmd.params[0] + "\r\n";
+	send(client.getFd(), reply.c_str(), reply.size(), 0);
+}
+
+void Server::handleMode(Client& client, const Command& cmd) {
 	if(!client.isRegistered()) {
-		sendError(client, "451", " :You have not registered");
+		sendError(client, "451", ":You have not registered");
 		return;
 	}
 	if(cmd.params.size() < 1) {
 		sendError(client, "461", "MODE :Not enough parameters");
 		return;
 	}
+	if (cmd.params[0][0] != '#')
+    	return;
 	std::string channelName = cmd.params[0];
 	Channel *channel = findChannelByName(channelName);
 	if(!channel) {
@@ -292,7 +303,7 @@ void Server::handleMode(Client& client, const Command& cmd) {
 	
 	std::string modeStr = cmd.params[1];
 	if(modeStr[0] != '+' && modeStr[0] != '-') {
-		sendError(client, "501", client.getNick() + " :Unknown MODE flag");
+		sendError(client, "501", ":Unknown MODE flag");
 		return;
 	}
 	if(!channel->isModerator(client.getFd()))  {
@@ -309,7 +320,7 @@ void Server::handleMode(Client& client, const Command& cmd) {
 		}
 		else if	(modeStr[i] == 't') {
 			
-			bool oldValue = channel->isTopicRestricted();
+			bool oldValue = channel->isTopicRestricted(); //+t -
 			if(sign == '+')
 				channel->setTopicRestricted(true);
 			else if(sign == '-')
@@ -374,14 +385,90 @@ void Server::handleMode(Client& client, const Command& cmd) {
 		}
 
 		else if (modeStr[i] == 'l') {
+			bool oldHaslimit = channel->hasLimit();
+			size_t oldLimit = 0;
+			if(oldHaslimit)
+				oldLimit = channel->limit();
+			
+			std::string newLimits;
+			size_t limit = 0;
+
+			if(sign == '+') {
+				if(paramsIdx >= paramsCnt) {
+					sendError(client, "461", "MODE :Not enough parameters");
+					return;
+				}
+				newLimits = cmd.params[paramsIdx];
+				std::istringstream iss(newLimits);
+				char extra;
+				if (!(iss >> limit) || iss >> extra || limit == 0) {
+					sendError(client, "461", "MODE :Invalid limit");
+					return;
+				}
+
+				channel->setLimit(limit);
+				paramsIdx++;
+			}
+			else if(sign == '-')
+				channel->clearLimit();
+
+			bool changed = false;
+			if(sign == '+') {
+				if(!oldHaslimit)
+					changed = true;
+				else {
+					if(oldLimit != limit)
+						changed = true;
+				}
+			}
+			else if (sign == '-') {
+				if (oldHaslimit)
+					changed = true;
+			}
+
+			if (changed) {
+				std::string msg = ":" + client.getNick() + "!" + client.getUser()
+								+ "@localhost MODE " + channelName + " " + std::string(1, sign) + "l";
+				if (sign == '+')
+					msg += " " + toString(limit);
+				msg += "\r\n";
+				broadcastToChannel(*channel, msg, -1);
+			}
 
 		}
 		else if (modeStr[i] == 'o') {
+			if(paramsIdx >= paramsCnt) {
+				sendError(client, "461", "MODE :Not enough parameters");
+				return;
+			}
+			std::string targetNick = cmd.params[paramsIdx];
+			paramsIdx++;
 
+			Client* clientTarget = findClientByNick(targetNick);
+			if(!clientTarget) {
+				sendError(client, "401", targetNick + " :No such nick");
+				return;
+			}
+
+			if(!channel->hasMember(clientTarget->getFd())) {
+				sendError(client, "441", targetNick + " " + channelName + " :They aren't on that channel");
+				return;
+			}
+
+			bool changed = false;
+			if(sign == '+')
+				changed = channel->addModerator(clientTarget->getFd());
+			else if(sign == '-')
+				changed = channel->removeModerator(clientTarget->getFd());
+			if(changed) {
+				std::string msg = 	":" + client.getNick() + "!" + client.getUser()
+									+ "@localhost MODE " + channelName + " " + std::string(1, sign) + "o " + targetNick + "\r\n";
+				broadcastToChannel(*channel, msg, -1);
+			}
 		}
 		else {
 			std::string x(1, modeStr[i]);
-			sendError(client, "472", client.getNick() + " " + x + " :is unknown mode char to me");
+			sendError(client, "472", x + " :is unknown mode char to me");
 			return;
 		}
 	}
@@ -390,7 +477,7 @@ void Server::handleMode(Client& client, const Command& cmd) {
 
 void Server::handleTopic(Client& client, const Command& cmd) {
 	if(!client.isRegistered()) {
-		sendError(client, "451", " :You have not registered");
+		sendError(client, "451", ":You have not registered");
 		return;
 	}
 	if(cmd.params.size() < 1) {
@@ -427,13 +514,170 @@ void Server::handleTopic(Client& client, const Command& cmd) {
 	broadcastToChannel(*channel, msg, -1);
 }
 
+void Server::handlePass(Client& client, const Command& cmd)
+{
+	if (client.passAccepted())
+	{
+		sendError(client, "462", ":You may not reregister");
+		return;
+	}
+	if (cmd.params.size() < 1)
+	{
+		sendError(client, "461", "PASS :Not enough parameters");
+		return;
+	}
+	if (cmd.params[0] != _password)
+	{
+		sendError(client, "464", ":Password incorrect");
+		return;
+	}
+	client.setPassAccepted(true);
+}
+
+void Server::handleNick(Client& client, const Command& cmd)
+{
+	if (!client.passAccepted())
+	{
+		sendError(client, "451", ":You have not registered");
+		return;
+	}
+	if (cmd.params.size() < 1)
+	{
+		sendError(client, "431", ":No nickname given");
+		return;
+	}
+	std::string nickname = cmd.params[0];
+	if (nicknameExists(nickname))
+	{
+		sendError(client, "433", nickname + " :Nickname is already in use");
+		return;
+	}
+	client.setNick(nickname);
+}
+
+void Server::handleUser(Client& client, const Command& cmd)
+{
+	if (!client.passAccepted())
+	{
+		sendError(client, "451", ":You have not registered");
+		return;
+	}
+	if (cmd.params.size() < 4)
+	{
+		sendError(client, "461", "User :Not enough parameters");
+		return;
+	}
+	client.setUser(cmd.params[0]);
+}
+// JOIN #chan
+void Server::handleJoin(Client& client, const Command& cmd)
+{
+	 if (!client.isRegistered())
+	{
+		sendError(client, "451", ":You have not registered");
+		return;
+	}
+	if (cmd.params.size() < 1)
+	{
+		sendError(client, "461", "JOIN :Not enough parameters");
+		return;
+	}
+	std::string channelName = cmd.params[0];
+	if (channelName[0] != '#')
+	{
+		sendError(client, "476", channelName + " :Bad Channel Mask");
+		return;
+	}
+	if (_channels.find(channelName) == _channels.end())
+		_channels.insert(std::make_pair(channelName, Channel(channelName)));
+	Channel& channel = _channels[channelName];
+	// JOIN #chan 
+
+	if(channel.isInviteOnly()) //if #chan +i
+	{
+		if(!channel.isInvited(client.getFd())) {
+			sendError(client, "473", channelName + " :Cannot join channel (+i)");
+			return;
+		}
+		channel.uninvite(client.getFd());
+	}
+	if (channel.isFull()) {
+		sendError(client, "471", channelName + " :Cannot join channel (+l)");
+		return;
+	}
+	if (channel.hasKey()) {
+		std::string key = (cmd.params.size() >= 2) ? cmd.params[1] : "";
+		if (!channel.checkKey(key)) {
+			sendError(client, "475", channelName + " :Cannot join channel (+k)");
+			return;
+	}
+}
+
+
+	channel.addMember(client.getFd());
+	if (channel.memberCount() == 1)
+		channel.addModerator(client.getFd());
+	
+	std::string msg = ":" + client.getNick() + "!" + client.getUser() + "@localhost JOIN " + channelName + "\r\n";
+	broadcastToChannel(channel, msg, -1);
+	sendNames(client, channel);
+}
+// PRIVMSG
+void Server::handlePrivMSG(Client& client, const Command& cmd)
+{
+	if (!client.isRegistered())
+	{
+		sendError(client, "451", ":You have not registered");
+		return;
+	}
+	if (cmd.params.size() < 1)
+	{
+		sendError(client, "411", ":No recipient given (PRIVMSG)");
+		return;
+	}
+	if (cmd.params.size() < 2)
+	{
+		sendError(client, "412", ":No text to send");
+		return;
+	}
+	std::string target = cmd.params[0];
+	std::string message = cmd.params[1];
+
+	if (target[0] == '#')
+	{
+		Channel* channel = findChannelByName(target);
+		if (!channel)
+		{
+			sendError(client, "403", target + " :No such channel");
+			return;
+		}
+		if (!channel->hasMember(client.getFd()))
+		{
+			sendError(client, "404", target + " :Cannot send to channel");
+			return;
+		}
+		std::string output = ":" + client.getNick() + "!" + client.getUser() + "@localhost PRIVMSG " + target + " :" + message + "\r\n";
+		broadcastToChannel(*channel, output, client.getFd());
+	}
+	else
+	{
+		Client* targetClient = findClientByNick(target);
+		if (!targetClient)
+		{
+			sendError(client, "401", target + " :No such nick/channel");
+			return;
+		}
+		std::string output = ":" + client.getNick() + "!" + client.getUser() + "@localhost PRIVMSG " + target + " :" + message + "\r\n";
+		send(targetClient->getFd(), output.c_str(), output.size(), 0);
+	}
+}
 
 //KICK #a <nickB> :bye
 void	Server::handleKick(Client &client, const Command& cmd) {
 	
 
 	if(!client.isRegistered()) {
-		sendError(client, "451", " :You have not registered");
+		sendError(client, "451", ":You have not registered");
 		return;
 	}
 	if(cmd.params.size() < 2) {
@@ -479,7 +723,7 @@ void	Server::handleKick(Client &client, const Command& cmd) {
 void Server::handleInvite(Client& client, const Command& cmd)
 {
 	if (!client.isRegistered()) {
-		sendError(client, "451", " :You have not registered");
+		sendError(client, "451", ":You have not registered");
 		return;
 	}
 	if (cmd.params.size() < 2) {
@@ -695,9 +939,11 @@ void Server::sendInvit(Client& client, Client& target, Channel& channel)
 
 void Server::sendError(Client& client, const std::string& code, const std::string& message)
 {
-	std::string output = ":ircserv " + code + message + "\r\n";
-	send(client.getFd(), output.c_str(), output.size(), 0);
+    std::string nick = client.getNick().empty() ? "*" : client.getNick();
+    std::string output = ":ircserv " + code + " " + nick + " " + message + "\r\n";
+    send(client.getFd(), output.c_str(), output.size(), 0);
 }
+
 
 void Server::sendWelcome(Client& client)
 {
@@ -737,6 +983,4 @@ void Server::broadcastToChannel(Channel& channel, const std::string& msg, int ex
         send(fd, msg.c_str(), msg.size(), 0);
     }
 }
-
-
 
