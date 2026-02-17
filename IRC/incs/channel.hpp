@@ -26,6 +26,8 @@ class Channel
 
 		Channel();
 		Channel(std::string name);
+		Channel(const Channel& copy);
+		Channel& operator=(const Channel& src);
 		~Channel();
 
 

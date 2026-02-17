@@ -54,7 +54,6 @@ class Server
 			void handleCommand(Client& client, const Command& cmd);
 
 			//gestion authentification
-			
 			void handlePass(Client& client, const Command& cmd);
 			void handleNick(Client& client, const Command& cmd);
 			void handleUser(Client& client, const Command& cmd);
@@ -63,7 +62,6 @@ class Server
 			bool nicknameExists(const std::string& nick);
 
 			//channel
-
 			Channel* findChannelByName(const std::string& nick);
 			Client*	findClientByNick(const std::string& nick);
 			void	handlePing(Client& client, const Command& cmd);
@@ -73,17 +71,17 @@ class Server
 			void 	handleInvite(Client& client, const Command& cmd);
 
 			//réponses
-			
 			void sendError(Client& client, const std::string& code, const std::string& message);
 			void sendWelcome(Client& client);
 			void sendNames(Client& client, Channel& channel);
 			void sendTopic(Client& client, Channel& channel, std::string const& code, const std::string& message);
 			void sendInvit(Client& client, Client& target, Channel& channel);
 			void sendReply(Client& client, Client& target, Channel& channel, std::string const& code);
-
 			void sendMode(Client& client, std::string channelName, std::string&  modes, std::string&  params);
-			
 			void broadcastToChannel(Channel& channel, const std::string& msg, int exceptFd);
+
+			Server(const Server& other);
+			Server& operator=(const Server& other);
 
 	public:
 			Server(int port, const std::string& password);

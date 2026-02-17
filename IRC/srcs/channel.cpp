@@ -16,6 +16,30 @@ Channel::Channel(std::string name)
   _hasKey(false),
   _hasLimit(false) {}
 
+Channel::Channel(const Channel& copy)
+{
+	*this = copy;
+}
+
+Channel& Channel::operator=(const Channel& other)
+{
+	if (this != &other)
+	{
+		_name = other._name;
+		_members = other._members;
+		_moderators = other._moderators;
+		_invited = other._invited;
+		_topic = other._topic;
+		_key = other._key;
+		_limit = other._limit;
+		_inviteOnly = other._inviteOnly;
+		_topicRestricted = other._topicRestricted;
+		_hasKey = other._hasKey;
+		_hasLimit = other._hasLimit;
+	}
+	return (*this);
+}
+
 Channel::~Channel() {}
 
 bool	Channel::hasMember(int fd) const

@@ -20,6 +20,31 @@ Client::Client(int fd) : _fd(fd), _passAccepted(false), _hasNick(false), _hasUse
 {
 }
 
+Client::Client(const Client& copy)
+{
+	*this = copy;
+}
+
+Client& Client::operator=(const Client& src)
+{
+	if (this != &other)
+	{
+		_fd = src._fd;
+		_buffer = src._buffer;
+		_passAccepted = src._passAccepted
+		_hasNick = src._hasNick;
+		_hasUser = src._hasUser;
+		_welcomed = src. _welcomed;
+		_nickname = src._nickname;
+		_username = src._username;
+	}
+	return (*this);
+}
+
+Client::~Client()
+{
+}
+
 bool Client::passAccepted() const
 {
 	return (_passAccepted);

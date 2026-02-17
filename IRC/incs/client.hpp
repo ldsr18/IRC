@@ -33,6 +33,9 @@ class Client
 	public:
 			Client();
 			Client(int fd);
+			Client(const Client& copy);
+			Client& operator=(const Client& src);
+			~Client();
 
 			//getter d'état
 			bool passAccepted() const;
