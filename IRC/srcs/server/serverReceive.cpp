@@ -34,6 +34,12 @@ bool Server::receiveFromClient(int clientFd)
 	Client& client = it->second;
 	// Ajout au buffer du client
 	client.getBuffer().append(buffer, bytes);
+	if (client.getBuffer().size() > 5120)
+	{
+		std::cout << "Limit exceeded for fd " << clientFd << ". Kicking client." << std::endl;
+		handleQuit(client);
+		return false;
+	}
 
 	std::string& buf = client.getBuffer();
 	size_t pos;
@@ -47,6 +53,7 @@ bool Server::receiveFromClient(int clientFd)
 		//debug, à supprimer a la fin !!!!!!!!!!
 		std::cout << "Complete message from fd " << clientFd << ": [" << message << "]" << std::endl;
 		
+
 		Command cmd = parseCommand(message);
 		if (!cmd.name.empty())
 			if(!handleCommand(client, cmd))
