@@ -30,9 +30,12 @@ void Server::handleJoin(Client& client, const Command& cmd)
 		sendError(client, "476", channelName + " :Bad Channel Mask");
 		return;
 	}
-	if (_channels.find(channelName) == _channels.end())
+	if (_channels.find(channelName) == _channels.end()) {
 		_channels.insert(std::make_pair(channelName, Channel(channelName)));
+	}
 	Channel& channel = _channels[channelName];
+	if(channel.hasMember(client.getFd()))
+		return;
 
 	if(channel.isInviteOnly()) //if #chan +i
 	{
@@ -64,3 +67,7 @@ void Server::handleJoin(Client& client, const Command& cmd)
 	broadcastToChannel(channel, msg, -1);
 	sendNames(client, channel);
 }
+
+
+// A JOIN #chan  			 B JOIN #chan 
+// JOIN #chan

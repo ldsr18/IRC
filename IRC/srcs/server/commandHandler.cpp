@@ -34,6 +34,10 @@ void Server::handleCommand(Client& client, const Command& cmd)
 		handlePrivMSG(client, cmd);
 	else if (cmd.name == "PING")
 		handlePing(client, cmd);
+	else if (cmd.name == "PART")
+		handlePart(client, cmd);
+	// else if (cmd.name == "QUIT")
+	// 	handleQuit(client, cmd);
 	else
 		sendError(client, "421", cmd.name + " :Unknown command");
 

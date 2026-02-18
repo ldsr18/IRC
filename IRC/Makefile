@@ -11,6 +11,7 @@ SRCS =	srcs/channel.cpp \
 		srcs/commands/kick.cpp \
 		srcs/commands/mode.cpp \
 		srcs/commands/nick.cpp \
+		srcs/commands/part.cpp \
 		srcs/commands/pass.cpp \
 		srcs/commands/ping.cpp \
 		srcs/commands/privmsg.cpp\
