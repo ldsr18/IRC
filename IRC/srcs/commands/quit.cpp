@@ -12,11 +12,27 @@
 
 #include "server.hpp"
 
-void Server::handleQuit(Client& client, const Command& cmd)
+void Server::handleQuit(Client& client)
 {
-	if (cmd.params.empty())
-		return;
-
-	std::string reply = "PONG :" + cmd.params[0] + "\r\n";
-	send(client.getFd(), reply.c_str(), reply.size(), 0);
+	std::map<std::string, Channel>::iterator it;
+	for(it = _channels.begin(); it != _channels.end(); it++) {
+		if(it->second.hasMember(client.getFd())) {
+			std::string msg;
+			// ":" + NICK + "!" + USER + "@" + "localhost" + "QUIT :Client Quit"
+			msg = ":" + client.getNick() + "!" + client.getUser() + "@localhost QUIT :Client Quit\r\n";
+			broadcastToChannel(it->second, msg, -1);
+			it->second.removeMember(client.getFd());
+			if(!it->second.memberCount()) {
+				_channels.erase(it->first);
+			}
+		}
+	}
+	std::string msg = "ERROR :Closing Link: localhost (Client Quit)\r\n";
+	send(client.getFd(), msg.c_str(), msg.size(), 0);
+	close(client.getFd());
+	removeFd(client.getFd());
+	_clients.erase(client.getFd());
 }
+
+
+

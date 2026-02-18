@@ -54,6 +54,8 @@ void print_usage_guide() {
 	std::cout << "      - k (channel key)" << std::endl;
 	std::cout << "      - l (user limit)" << std::endl;
 	std::cout << "      - o (operator)" << std::endl;
+	std::cout << "  • PART <#chan>" << std::endl;
+	std::cout << "  • QUIT" << std::endl;
 
 	std::cout << YELLOW
 				<< "--------------------------------------------------------"

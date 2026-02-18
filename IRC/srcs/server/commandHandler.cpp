@@ -36,8 +36,8 @@ void Server::handleCommand(Client& client, const Command& cmd)
 		handlePing(client, cmd);
 	else if (cmd.name == "PART")
 		handlePart(client, cmd);
-	// else if (cmd.name == "QUIT")
-	// 	handleQuit(client, cmd);
+	else if (cmd.name == "QUIT")
+		handleQuit(client);
 	else
 		sendError(client, "421", cmd.name + " :Unknown command");
 
