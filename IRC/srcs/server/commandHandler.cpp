@@ -12,7 +12,7 @@
 
 #include "server.hpp"
 
-void Server::handleCommand(Client& client, const Command& cmd)
+bool Server::handleCommand(Client& client, const Command& cmd)
 {
 	if 		(cmd.name == "PASS")
 		handlePass(client, cmd);
@@ -36,8 +36,10 @@ void Server::handleCommand(Client& client, const Command& cmd)
 		handlePing(client, cmd);
 	else if (cmd.name == "PART")
 		handlePart(client, cmd);
-	else if (cmd.name == "QUIT")
+	else if (cmd.name == "QUIT") {
 		handleQuit(client);
+		return false;
+	}
 	else
 		sendError(client, "421", cmd.name + " :Unknown command");
 
@@ -46,4 +48,5 @@ void Server::handleCommand(Client& client, const Command& cmd)
 		sendWelcome(client);
 		client.setWelcomed(true);
 	}
+	return true;
 }

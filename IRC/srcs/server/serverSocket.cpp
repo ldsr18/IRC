@@ -38,6 +38,7 @@ void Server::setupSocket()
 	pollfd pfd;
 	pfd.fd = _serverFd;
 	pfd.events = POLLIN;
+	pfd.revents = 0;
 	_fds.push_back(pfd);
 	
 	std::cout << "Server listening on port " << _port << std::endl;
@@ -45,7 +46,7 @@ void Server::setupSocket()
 
 void Server::run()
 {
-	while (true)
+	while (server_running)
 	{
 		int ret = poll(&_fds[0], _fds.size(), -1);
 		if (ret < 0)
@@ -60,7 +61,10 @@ void Server::run()
 				else
 				{
 					if (!receiveFromClient(_fds[i].fd))
-						i--;
+					{
+						if (i > 0) i--; 
+						else continue;
+					}
 				}
 			}
 		}
@@ -81,6 +85,7 @@ void Server::acceptClient()
 	pollfd pfd;
 	pfd.fd = clientFd;
 	pfd.events = POLLIN;
+	pfd.revents = 0;
 	_fds.push_back(pfd);
 
 	_clients.insert(std::make_pair(clientFd, Client(clientFd)));

@@ -62,6 +62,12 @@ void print_usage_guide() {
 				<< RESET << std::endl << std::endl;
 }
 
+bool server_running = true;
+
+void signalHandler(int signum) {
+	(void)signum;
+	server_running = false;
+}
 
 int main(int argc, char **argv)
 {
@@ -74,6 +80,7 @@ int main(int argc, char **argv)
     print_banner();
     print_usage_guide();
 
+	signal(SIGINT, signalHandler);
     int port = std::atoi(argv[1]);
     std::string password = argv[2];
     

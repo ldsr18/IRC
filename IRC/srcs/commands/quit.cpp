@@ -15,7 +15,10 @@
 void Server::handleQuit(Client& client)
 {
 	std::map<std::string, Channel>::iterator it;
-	for(it = _channels.begin(); it != _channels.end(); it++) {
+
+	for(it = _channels.begin(); it != _channels.end();) {
+		std::map<std::string, Channel>::iterator next = it;
+		next++;
 		if(it->second.hasMember(client.getFd())) {
 			std::string msg;
 			// ":" + NICK + "!" + USER + "@" + "localhost" + "QUIT :Client Quit"
@@ -26,6 +29,7 @@ void Server::handleQuit(Client& client)
 				_channels.erase(it->first);
 			}
 		}
+		it = next;
 	}
 	std::string msg = "ERROR :Closing Link: localhost (Client Quit)\r\n";
 	send(client.getFd(), msg.c_str(), msg.size(), 0);

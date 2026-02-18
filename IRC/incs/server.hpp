@@ -23,6 +23,8 @@
 #include <cstdlib>
 #include <map>
 #include <sstream>
+#include <csignal>
+
 
 #include <unistd.h> //close
 #include <fcntl.h>
@@ -40,6 +42,8 @@
 #define YELLOW  "\033[33m"
 #define MAGENTA "\033[35m"
 #define GREY    "\033[90m"
+
+extern bool server_running;
 
 class Server
 {
@@ -60,7 +64,7 @@ class Server
 
 			//parsing command
 			Command parseCommand(const std::string& line);
-			void handleCommand(Client& client, const Command& cmd);
+			bool handleCommand(Client& client, const Command& cmd);
 
 			//gestion authentification
 			void handlePass(Client& client, const Command& cmd);

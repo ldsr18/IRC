@@ -49,7 +49,8 @@ bool Server::receiveFromClient(int clientFd)
 		
 		Command cmd = parseCommand(message);
 		if (!cmd.name.empty())
-			handleCommand(client, cmd);
+			if(!handleCommand(client, cmd))
+				return false;
 	}
 	return (true);
 }
