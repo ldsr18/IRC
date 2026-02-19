@@ -6,7 +6,7 @@
 /*   By: jdecarro <jdecarro@student.42lausanne.c    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/17 11:15:51 by jdecarro          #+#    #+#             */
-/*   Updated: 2026/02/17 11:16:01 by jdecarro         ###   ########.fr       */
+/*   Updated: 2026/02/19 10:55:04 by jdecarro         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,7 +15,7 @@
 void Server::handleQuit(Client& client)
 {
 	std::map<std::string, Channel>::iterator it;
-
+	std::cout << "Client disconnected (fd = " << client.getFd() << ")\n";
 	for(it = _channels.begin(); it != _channels.end();) {
 		std::map<std::string, Channel>::iterator next = it;
 		next++;
@@ -37,6 +37,3 @@ void Server::handleQuit(Client& client)
 	removeFd(client.getFd());
 	_clients.erase(client.getFd());
 }
-
-
-

@@ -20,15 +20,14 @@ Server::Server(int port, const std::string& password) : _port(port), _serverFd(-
 
 Server::~Server()
 {
+	std::cout << "\nShutting down server..." << std::endl;
 	for (size_t i = 0; i < _fds.size(); i++)
 	{
 		if (_fds[i].fd >= 0)
-		{
 			close(_fds[i].fd);
-			std::cout << "Closing fd: " << _fds[i].fd << std::endl;
-		}
 	}
 	_fds.clear();
 	_clients.clear();
 	_channels.clear();
+	std::cout << "Server stopped cleanly." << std::endl;
 }

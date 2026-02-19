@@ -24,7 +24,7 @@
 #include <map>
 #include <sstream>
 #include <csignal>
-
+#include <cerrno>
 
 #include <unistd.h> //close
 #include <fcntl.h>

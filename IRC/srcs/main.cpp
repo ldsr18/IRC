@@ -86,11 +86,14 @@ int main(int argc, char **argv)
     
     std::cout << BOLD << "Status: " << GREEN << "Starting server on port " << port << "..." << RESET << std::endl;
 
-    try {
+    try
+	{
         Server serv(port, password);
         serv.run();
-    } catch (const std::exception& e) {
-        std::cerr << "\033[31mError: " << e.what() << RESET << std::endl;
+    }
+	catch (const std::exception& e)
+	{
+        std::cerr << "\033[31mFatal error: " << e.what() << RESET << std::endl;
         return (1);
     }
 

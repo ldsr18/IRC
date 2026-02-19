@@ -6,7 +6,7 @@
 /*   By: jdecarro <jdecarro@student.42lausanne.c    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/17 11:19:48 by jdecarro          #+#    #+#             */
-/*   Updated: 2026/02/17 11:20:53 by jdecarro         ###   ########.fr       */
+/*   Updated: 2026/02/19 15:25:05 by jdecarro         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -50,9 +50,12 @@ void Server::run()
 	{
 		int ret = poll(&_fds[0], _fds.size(), -1);
 		if (ret < 0)
+		{
+			if (errno == EINTR)
+				continue;
 			throw std::runtime_error("poll failed");
-
-		for (size_t i = 0; i < _fds.size(); i++)
+		}
+		for (size_t i = 0; i < _fds.size(); )
 		{
 			if (_fds[i].revents & POLLIN)
 			{
@@ -61,12 +64,10 @@ void Server::run()
 				else
 				{
 					if (!receiveFromClient(_fds[i].fd))
-					{
-						if (i > 0) i--; 
-						else continue;
-					}
+						continue;
 				}
 			}
+			i++;
 		}
 	}
 }
@@ -90,7 +91,7 @@ void Server::acceptClient()
 
 	_clients.insert(std::make_pair(clientFd, Client(clientFd)));
 
-	std::cout << "Client connected (fd = " << clientFd << " )" << std::endl;
+	std::cout << "Client connected (fd = " << clientFd << ")" << std::endl;
 }
 
 void Server::removeFd(int fd)
