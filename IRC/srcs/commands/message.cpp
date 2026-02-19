@@ -6,7 +6,7 @@
 /*   By: jdecarro <jdecarro@student.42lausanne.c    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/17 11:09:44 by jdecarro          #+#    #+#             */
-/*   Updated: 2026/02/19 16:26:47 by jdecarro         ###   ########.fr       */
+/*   Updated: 2026/02/19 17:47:30 by jdecarro         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -50,7 +50,7 @@ void Server::handleMessage(Client& client, const Command& cmd, bool isNotice)
 				sendError(client, "404", target + " :Cannot send to channel");
 			return;
 		}
-		std::string output = ":" + client.getNick() + "!" + client.getUser() + "@localhost PRIVMSG " + target + " :" + message + "\r\n";
+		std::string output = ":" + client.getNick() + "!" + client.getUser() + "@localhost " + commandName + " " + target + " :" + message + "\r\n";
 		broadcastToChannel(*channel, output, client.getFd());
 	}
 	else
@@ -62,7 +62,7 @@ void Server::handleMessage(Client& client, const Command& cmd, bool isNotice)
 				sendError(client, "401", target + " :No such nick/channel");
 			return;
 		}
-		std::string output = ":" + client.getNick() + "!" + client.getUser() + "@localhost PRIVMSG " + target + " :" + message + "\r\n";
+		std::string output = ":" + client.getNick() + "!" + client.getUser() + "@localhost " + commandName + " " + target + " :" + message + "\r\n";
 		send(targetClient->getFd(), output.c_str(), output.size(), 0);
 	}
 }
