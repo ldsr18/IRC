@@ -15,7 +15,7 @@
 void Server::handleQuit(Client& client)
 {
 	std::map<std::string, Channel>::iterator it;
-
+	std::cout << "Client disconnected (fd = " << client.getFd() << ")\n";
 	for(it = _channels.begin(); it != _channels.end();) {
 		std::map<std::string, Channel>::iterator next = it;
 		next++;
