@@ -71,7 +71,7 @@ class Server
 			void handleNick(Client& client, const Command& cmd);
 			void handleUser(Client& client, const Command& cmd);
 			void handleJoin(Client& client, const Command& cmd);
-			void handlePrivMSG(Client& client, const Command& cmd);
+			void handleMessage(Client& client, const Command& cmd, bool isNotice);
 			bool nicknameExists(const std::string& nick);
 
 			//channel

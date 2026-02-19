@@ -6,7 +6,7 @@
 /*   By: jdecarro <jdecarro@student.42lausanne.c    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/17 11:22:36 by jdecarro          #+#    #+#             */
-/*   Updated: 2026/02/17 11:22:58 by jdecarro         ###   ########.fr       */
+/*   Updated: 2026/02/19 16:27:37 by jdecarro         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,7 +31,9 @@ bool Server::handleCommand(Client& client, const Command& cmd)
 	else if (cmd.name == "MODE")
 		handleMode(client, cmd);
 	else if (cmd.name == "PRIVMSG")
-		handlePrivMSG(client, cmd);
+		handleMessage(client, cmd, false);
+	else if (cmd.name == "NOTICE")
+		handleMessage(client, cmd, true);
 	else if (cmd.name == "PING")
 		handlePing(client, cmd);
 	else if (cmd.name == "PART")
