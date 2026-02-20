@@ -6,7 +6,7 @@
 /*   By: jdecarro <jdecarro@student.42lausanne.c    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/20 09:58:36 by jdecarro          #+#    #+#             */
-/*   Updated: 2026/02/20 09:58:38 by jdecarro         ###   ########.fr       */
+/*   Updated: 2026/02/20 10:26:04 by jdecarro         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -126,38 +126,34 @@ void Mybot::recv_Priv_Msg(std::string message) {
 		}
 		else if (!content.empty()){
 			if(content[0] == '!')
-    		sendMessage(user, "Unknown command. Type !help to see what I can do!");
+    		sendMessage(user, "Unknown command. Send me !help to see what I can do!");
 		}
 	}
 }
 
-void Mybot::interaction() {
+void Mybot::interaction()
+{
 	size_t pos;
 	while ((pos = _storage.find("\r\n")) != std::string::npos)
 	{
-		std::cout << "MyBot waiting ..." << std::endl;
+		std::cout << "Waiting for a new message ..." << std::endl;
 		std::string message = _storage.substr(0, pos);
-		// message = :nik!n@localhost PRIVMSG MyBot :hello
+
 		_storage.erase(0, pos + 2);
-		// _storage  = "le reste ... \r\n ..."
 
 		if (message.find("PRIVMSG") != std::string::npos)
 			recv_Priv_Msg(message);
-		else
-			std::cout << "debug message : " << message << std::endl;
-
 	}
 }
 
 void Mybot::receive_msg(char *buff) {
 	while(_alive) {
-        int valrecv = recv(_sock_fd, (void *)buff, 511, 0); // !hello ==> !hel \n\r ==> lo\r\n
-        if(valrecv <= 0) break;
-        buff[valrecv] = '\0';
-        _storage += buff;
+		int valrecv = recv(_sock_fd, (void *)buff, 511, 0);
+		if(valrecv <= 0) break;
+		buff[valrecv] = '\0';
+		_storage += buff;
 
-        std::cout << "Server said :\n" << _storage << std::endl;
-        interaction();
+		interaction();
 	}
 }
 
@@ -185,12 +181,11 @@ void Mybot::init_bot() {
     }
 }
 
-void Mybot::run_bot() {
-	std::cout << "running...." << std::endl;
-
+void Mybot::run_bot()
+{
 	init_bot();
 
-	std::cout << "MyBot listenning" << std::endl;
+	std::cout << "MyBot is running ..." << std::endl;
 
     std::string auth = "PASS " + _pass + "\r\nNICK MyBot\r\nUSER MyBot * 0 :MyBot\r\n";
     send(_sock_fd, auth.c_str(), auth.size(), 0);
@@ -198,7 +193,7 @@ void Mybot::run_bot() {
     char buff[512];
     std::memset(&buff, 0, sizeof(buff));
 	receive_msg(buff);
-	std::cout << "close fd" << std::endl;
+	std::cout << "Closing fd ..." << std::endl;
 	if (_sock_fd != -1) {
 		close(_sock_fd);
 	}

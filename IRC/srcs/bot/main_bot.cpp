@@ -6,7 +6,7 @@
 /*   By: jdecarro <jdecarro@student.42lausanne.c    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/20 09:58:27 by jdecarro          #+#    #+#             */
-/*   Updated: 2026/02/20 09:58:30 by jdecarro         ###   ########.fr       */
+/*   Updated: 2026/02/20 10:25:31 by jdecarro         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,6 +31,6 @@ int main(int ac, char **av) {
 		return 1;
 	}
 
-	std::cout << BOLD << "bey...:)" << RESET << std::endl;
+	std::cout << BOLD << "Bye...:)" << RESET << std::endl;
 	return 0;
 }
