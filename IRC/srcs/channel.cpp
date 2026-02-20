@@ -49,7 +49,7 @@ bool	Channel::hasMember(int fd) const
 
 bool	Channel::addMember(int fd)
 { 
-	return _members.insert(fd).second; // _members.insert(fd) retourne paire(iterator, bool) bool sur si il a ete bien insert ou pas
+	return _members.insert(fd).second;
 }
 
 bool	Channel::removeMember(int fd)
@@ -78,7 +78,6 @@ bool	Channel::removeModerator(int fd)
 	return _moderators.erase(fd) != 0;
 }
 
-//	Topic
 std::string const& Channel::topic() const
 { 
 	return _topic;
@@ -97,7 +96,6 @@ void 	Channel::setTopicRestricted(bool tr) {
 	_topicRestricted = tr;
 }
 
-// Invites (+i)
 bool	Channel::isInviteOnly() const
 { 
 	return _inviteOnly;
@@ -123,7 +121,6 @@ void	Channel::uninvite(int fd)
 	_invited.erase(fd);
 }
 
-//	Key (+k)
 std::string const& Channel::getKEy() const {
 	return _key;
 }
@@ -152,7 +149,6 @@ void	Channel::clearKey()
 	_hasKey = false;
 }
 
-//	Limit (+l)
 bool	Channel::hasLimit() const
 { 
 	return _hasLimit;

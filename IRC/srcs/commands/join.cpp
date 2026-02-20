@@ -6,7 +6,7 @@
 /*   By: jdecarro <jdecarro@student.42lausanne.c    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/17 11:08:26 by jdecarro          #+#    #+#             */
-/*   Updated: 2026/02/17 11:09:26 by jdecarro         ###   ########.fr       */
+/*   Updated: 2026/02/20 09:56:44 by jdecarro         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -37,7 +37,7 @@ void Server::handleJoin(Client& client, const Command& cmd)
 	if(channel.hasMember(client.getFd()))
 		return;
 
-	if(channel.isInviteOnly()) //if #chan +i
+	if(channel.isInviteOnly())
 	{
 		if(!channel.isInvited(client.getFd())) {
 			sendError(client, "473", channelName + " :Cannot join channel (+i)");
@@ -67,7 +67,3 @@ void Server::handleJoin(Client& client, const Command& cmd)
 	broadcastToChannel(channel, msg, -1);
 	sendNames(client, channel);
 }
-
-
-// A JOIN #chan  			 B JOIN #chan 
-// JOIN #chan

@@ -6,7 +6,7 @@
 /*   By: jdecarro <jdecarro@student.42lausanne.c    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/17 11:19:48 by jdecarro          #+#    #+#             */
-/*   Updated: 2026/02/19 15:25:05 by jdecarro         ###   ########.fr       */
+/*   Updated: 2026/02/20 09:59:19 by jdecarro         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,10 +31,9 @@ void Server::setupSocket()
 		throw std::runtime_error("bind failed");
 	if (listen(_serverFd, SOMAXCONN) < 0)
 		throw std::runtime_error("listen failed");
-		
-	// non-bloquant (OBLIGATOIRE pour ft_irc)
-	fcntl(_serverFd, F_SETFL, O_NONBLOCK);
 	
+	fcntl(_serverFd, F_SETFL, O_NONBLOCK);
+
 	pollfd pfd;
 	pfd.fd = _serverFd;
 	pfd.events = POLLIN;

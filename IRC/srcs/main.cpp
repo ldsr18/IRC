@@ -41,6 +41,7 @@ void print_usage_guide() {
 	std::cout << CYAN << BOLD << "  Messaging & Channels:" << RESET << std::endl;
 	std::cout << "  • JOIN <#channel>" << std::endl;
 	std::cout << "  • PRIVMSG <target> :<message>" << std::endl;
+	std::cout << "  • NOTICE <target> :<message>" << std::endl;
 
 	std::cout << std::endl;
 
@@ -71,31 +72,31 @@ void signalHandler(int signum) {
 
 int main(int argc, char **argv)
 {
-    if (argc != 3)
-    {
-        std::cerr << BOLD << "Usage: " << RESET << "./ircserv <port> <password>" << std::endl;
-        return (1);
-    }
+	if (argc != 3)
+	{
+		std::cerr << BOLD << "Usage: " << RESET << "./ircserv <port> <password>" << std::endl;
+		return (1);
+	}
 
-    print_banner();
-    print_usage_guide();
+	print_banner();
+	print_usage_guide();
 
 	signal(SIGINT, signalHandler);
-    int port = std::atoi(argv[1]);
-    std::string password = argv[2];
-    
-    std::cout << BOLD << "Status: " << GREEN << "Starting server on port " << port << "..." << RESET << std::endl;
+	int port = std::atoi(argv[1]);
+	std::string password = argv[2];
 
-    try
+	std::cout << BOLD << "Status: " << GREEN << "Starting server on port " << port << "..." << RESET << std::endl;
+
+	try
 	{
-        Server serv(port, password);
-        serv.run();
-    }
+		Server serv(port, password);
+		serv.run();
+	}
 	catch (const std::exception& e)
 	{
-        std::cerr << "\033[31mFatal error: " << e.what() << RESET << std::endl;
-        return (1);
-    }
+		std::cerr << "\033[31mFatal error: " << e.what() << RESET << std::endl;
+		return (1);
+	}
 
-    return (0);
+	return (0);
 }

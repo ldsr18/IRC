@@ -49,7 +49,7 @@ class Server
 {
 	private:
 			int _port;
-			int _serverFd; //fd du serveur = le socket qui écoute
+			int _serverFd;
 			std::string _password;
 			std::map<std::string, Channel> _channels;
 
@@ -57,7 +57,7 @@ class Server
 			std::map<int, Client> _clients;
 
 			//réseau
-			void setupSocket(); //crée et prépare lee serveur
+			void setupSocket();
 			void acceptClient();
 			bool receiveFromClient(int clientFd);
 			void removeFd(int fd);

@@ -6,7 +6,7 @@
 /*   By: jdecarro <jdecarro@student.42lausanne.c    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/17 11:21:13 by jdecarro          #+#    #+#             */
-/*   Updated: 2026/02/17 11:21:52 by jdecarro         ###   ########.fr       */
+/*   Updated: 2026/02/20 09:59:04 by jdecarro         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,9 +30,8 @@ bool Server::receiveFromClient(int clientFd)
 
 	std::map<int, Client>::iterator it = _clients.find(clientFd);
 	if (it == _clients.end())
-		return (true); //ne devrait jamais arriver
+		return (true);
 	Client& client = it->second;
-	// Ajout au buffer du client
 	client.getBuffer().append(buffer, bytes);
 	if (client.getBuffer().size() > 5120)
 	{
@@ -44,15 +43,13 @@ bool Server::receiveFromClient(int clientFd)
 	std::string& buf = client.getBuffer();
 	size_t pos;
 
-	// Extraction des messages complets (\r\n)
+	/*Extraction des messages complets (\r\n)
+	debug
+	std::cout << "Complete message from fd " << clientFd << ": [" << message << "]" << std::endl;*/
 	while ((pos = buf.find("\r\n")) != std::string::npos)
 	{
 		std::string message = buf.substr(0, pos);
 		buf.erase(0, pos + 2);
-
-		//debug, à supprimer a la fin !!!!!!!!!!
-		std::cout << "Complete message from fd " << clientFd << ": [" << message << "]" << std::endl;
-		
 
 		Command cmd = parseCommand(message);
 		if (!cmd.name.empty())

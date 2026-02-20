@@ -6,7 +6,7 @@
 /*   By: jdecarro <jdecarro@student.42lausanne.c    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/17 11:27:01 by jdecarro          #+#    #+#             */
-/*   Updated: 2026/02/17 11:39:11 by jdecarro         ###   ########.fr       */
+/*   Updated: 2026/02/20 09:59:33 by jdecarro         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,7 +21,6 @@ void Server::sendMode(Client& client, std::string channelName, std::string&  mod
 	send(client.getFd(), output.c_str(), output.size(), 0);
 }
 
-//:ircserv 332 <nick> <#chan> :<topic>
 void Server::sendTopic(Client& client, Channel& channel, std::string const& code, const std::string& message)
 {
 	std::string output 		= ":ircserv " + code + " " + client.getNick() + " " 

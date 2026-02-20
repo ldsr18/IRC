@@ -12,13 +12,13 @@ class Channel
 		std::string		_name;
 		std::set<int>	_members;
 		std::set<int>	_moderators;
-		std::set<int>	_invited; 		// invitations (fd)
+		std::set<int>	_invited;
 		std::string		_topic;
-		std::string		_key;			// +k
-		size_t			_limit; 		// +l
+		std::string		_key;
+		size_t			_limit;
 
-		bool _inviteOnly; 		// +i
-		bool _topicRestricted; 	// +t
+		bool _inviteOnly;
+		bool _topicRestricted;
 		bool _hasKey;
 		bool _hasLimit;
 

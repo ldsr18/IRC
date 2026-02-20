@@ -6,7 +6,7 @@
 /*   By: jdecarro <jdecarro@student.42lausanne.c    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/17 11:12:51 by jdecarro          #+#    #+#             */
-/*   Updated: 2026/02/17 11:36:35 by jdecarro         ###   ########.fr       */
+/*   Updated: 2026/02/20 09:57:29 by jdecarro         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -46,7 +46,6 @@ void Server::handleMode(Client& client, const Command& cmd)
 		sendError(client, "442", channelName + " :You're not on that channel");
 		return;
 	}
-	// MODE #channel
 	if(cmd.params.size() == 1)
 	{
 		std::string modes = "+";
@@ -69,8 +68,6 @@ void Server::handleMode(Client& client, const Command& cmd)
 		sendMode(client, channelName, modes, params);
 		return;
 	}
-	//MODE #channel <args>
-	//MODE #t +t` / `MODE #t -t
 	std::string modeStr = cmd.params[1];
 	if(modeStr[0] != '+' && modeStr[0] != '-')
 	{
@@ -95,7 +92,7 @@ void Server::handleMode(Client& client, const Command& cmd)
 		else if	(modeStr[i] == 't')
 		{
 			
-			bool oldValue = channel->isTopicRestricted(); //+t -
+			bool oldValue = channel->isTopicRestricted();
 			if(sign == '+')
 				channel->setTopicRestricted(true);
 			else if(sign == '-')
