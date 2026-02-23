@@ -1,8 +1,10 @@
+*This project has been created as part of the 42 curriculum by jdecarro and mbendidi.*
+
 # ft_irc
 
 Implementation of an IRC server in C++98 as part of the 42 curriculum.
 
-## Introduction
+## Description
 
 The goal of this project is to implement an Internet Relay Chat (IRC) server following the IRC protocol specifications described in RFC 1459 and RFC 2812.
 
@@ -14,6 +16,8 @@ Constraints:
 - No threads
 - poll() (or equivalent) for multiplexing
 - Proper handling of partial reads/writes and CRLF terminated messages
+
+# Instructions
 
 ## Compilation
 
@@ -42,11 +46,6 @@ Example:
 Arguments:
 - port: TCP port on which the server listens
 - password: connection password required by clients
-
-## References
-
-- RFC 1459 — Internet Relay Chat Protocol
-- RFC 2812 — Internet Relay Chat: Client Protocol
 
 ## Connecting and Testing
 
@@ -285,9 +284,24 @@ The server returns appropriate IRC numeric replies when required, including:
 - 475 : Bad channel key
 - 482 : You're not channel operator
 
-## Authors
+# Resources
 
-jdecarro  
-mbendidi  
+## Protocol documentation
 
-42 Lausanne
+- RFC 1459 — Internet Relay Chat Protocol
+- RFC 2812 — Internet Relay Chat: Client Protocol
+
+## IRC Client
+
+- irssi - https://irssi.org
+- netcat (nc) - TCP testing tool
+
+## AI usage
+
+AI tools were used for:
+
+- Reviewing parsing ideas
+- Documentation
+- Helping structuring files
+
+All generated suggestions were manually reviewed, understood, and adapted before being integrated into the project.
