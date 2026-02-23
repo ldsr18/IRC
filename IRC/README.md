@@ -300,7 +300,6 @@ The server returns appropriate IRC numeric replies when required, including:
 
 AI tools were used for:
 
-- Reviewing parsing ideas
 - Documentation
 - Helping structuring files
 
